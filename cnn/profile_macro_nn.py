@@ -25,6 +25,7 @@ parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='de
 parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
 args = parser.parse_args()
 
+filename = "arch_profile"
 OPORTUNITY_GAP_ARCHITECTURE = "gen_latencies_architecture_op_gap.csv"
 CIFAR_INPUT_BATCH = 1
 CIFAR_INPUT_CHANNEL = 3
@@ -134,5 +135,5 @@ if __name__ == '__main__':
 
     model_df_with_acc_and_lat = profile_arch_lat_and_acc(dataset_name, 
         test_loader, sampled_architecture, criterion, device, drop_path_prob)
-    model_df_with_acc_and_lat.to_csv(Path(filename + '_architecture_{}.csv'.format(str(device))), 
+    model_df_with_acc_and_lat.to_csv(Path(filename + '_{}.csv'.format(str(device))), 
     index = None)
