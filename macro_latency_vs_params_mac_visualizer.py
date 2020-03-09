@@ -72,7 +72,7 @@ def draw_errorbar_graph(df):
 
 if __name__ == '__main__':
     list_files = args.filename
-    for file in list_files:
-        csv_path = list_files
+    for csv_file in list_files:
+        csv_path = csv_file
         df = pd.read_csv(csv_path)
         draw_errorbar_graph(df) 

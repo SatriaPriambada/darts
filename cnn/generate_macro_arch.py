@@ -20,17 +20,12 @@ from sklearn.decomposition import PCA
 
 import time
 import utils
-from thop import profile
-from statistics import stdev
-
 
 import genotypes
 from model import NetworkCIFAR
 from macro_model_search import MacroNetwork
 from architect import Architect
-import acc_profiler 
-import latency_profiler
-
+from profile_macro_nn import profile_arch_lat_and_acc
 from pathlib import Path
 
 log_format = '%(asctime)s %(message)s'
@@ -39,9 +34,6 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
 
 filename = "gen_latencies"
 CIFAR_CLASSES = 10
-CIFAR_INPUT_BATCH = 1
-CIFAR_INPUT_CHANNEL = 3
-CIFAR_INPUT_SIZE = 32
 NUM_SAMPLE = 300
 CLUSTERS = 8
 
@@ -55,18 +47,18 @@ def generate_macro(dataset_name,
                   device):
 
   np.random.seed(seed)
+  
+  criterion = nn.CrossEntropyLoss()
   if torch.cuda.is_available():
     logging.info('gpu device available')
     cudnn.benchmark = True
     torch.manual_seed(seed)
     cudnn.enabled=True
     torch.cuda.manual_seed(seed)
+    criterion = nn.CrossEntropyLoss().cuda()
   else:
     logging.info('no gpu device available, use CPU')
-  
-  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-  
-  criterion = nn.CrossEntropyLoss()
+    
   macro_network = MacroNetwork(init_channels, CIFAR_CLASSES, 
     layers, criterion, device=device)
   micro_genotypes = pd.read_csv(filename + '_{}_center.csv'.format(str(device)))
@@ -78,52 +70,6 @@ def generate_macro(dataset_name,
   model_df_with_acc_and_lat.to_csv(Path(filename + '_architecture_{}.csv'.format(str(device))), 
    index = None)
 
-  return model_df_with_acc_and_lat
-
-def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, criterion, device, drop_path_prob):
-  column = ['architecture',
-            'mean_lat',
-            'lat95',
-            'lat99',
-            'std_dev_lat',
-            'macs',
-            'params',
-            'acc']
-  df_with_lat = pd.DataFrame(columns=column)
-  dict_list = []
-
-  if dataset_name == "cifar10":
-    input = torch.zeros(CIFAR_INPUT_BATCH, CIFAR_INPUT_CHANNEL, 
-      CIFAR_INPUT_SIZE, CIFAR_INPUT_SIZE).to(device)
-  else:
-    sys.exit('Error!, dataset name not defined')
-  
-  for architecture in sampled_architectures:
-    model = architecture["model"].to(device)
-    model.drop_path_prob = drop_path_prob
-    #profile parameters
-    macs, params = profile(model, inputs=(input, ))
-    #profile latencies
-    mean_lat, latencies = latency_profiler.test_latency(model, input, device)
-    #profile accuracy
-    valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
-
-    dict_list.append({
-        'architecture_name': architecture["name"],
-        'mean_lat':mean_lat,
-        'lat95':latencies[94],
-        'lat99':latencies[98],
-        'std_dev_lat': stdev(latencies),
-        'macs':macs,
-        'params':params,
-        'acc': valid_acc
-      })
-  
-    #print(architecture)
-    print("============================")
-  
-  model_df_with_acc_and_lat = pd.DataFrame.from_dict(dict_list)
-  
   return model_df_with_acc_and_lat
 
 if __name__ == '__main__':
