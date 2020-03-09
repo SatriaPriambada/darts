@@ -5,7 +5,8 @@ from operations import *
 from torch.autograd import Variable
 from genotypes import PRIMITIVES
 from genotypes import Genotype
-
+import random
+import itertools
 
 class MixedOp(nn.Module):
 
@@ -60,7 +61,7 @@ class Cell(nn.Module):
 
 class Network(nn.Module):
 
-  def __init__(self, C, num_classes, layers, criterion, steps=4, multiplier=4, stem_multiplier=3):
+  def __init__(self, C, num_classes, layers, criterion, steps=4, multiplier=4, stem_multiplier=3, device='cuda'):
     super(Network, self).__init__()
     self._C = C
     self._num_classes = num_classes
@@ -92,7 +93,7 @@ class Network(nn.Module):
     self.global_pooling = nn.AdaptiveAvgPool2d(1)
     self.classifier = nn.Linear(C_prev, num_classes)
 
-    self._initialize_alphas()
+    self._initialize_alphas(device)
 
   def new(self):
     model_new = Network(self._C, self._num_classes, self._layers, self._criterion).cuda()
@@ -116,12 +117,16 @@ class Network(nn.Module):
     logits = self(input)
     return self._criterion(logits, target) 
 
-  def _initialize_alphas(self):
+  def _initialize_alphas(self, device):
     k = sum(1 for i in range(self._steps) for n in range(2+i))
     num_ops = len(PRIMITIVES)
 
-    self.alphas_normal = Variable(1e-3*torch.randn(k, num_ops).cuda(), requires_grad=True)
-    self.alphas_reduce = Variable(1e-3*torch.randn(k, num_ops).cuda(), requires_grad=True)
+    if device == "cuda":
+      self.alphas_normal = Variable(1e-3*torch.randn(k, num_ops).cuda(), requires_grad=True)
+      self.alphas_reduce = Variable(1e-3*torch.randn(k, num_ops).cuda(), requires_grad=True)
+    else:
+      self.alphas_normal = Variable(1e-3*torch.randn(k, num_ops), requires_grad=True)
+      self.alphas_reduce = Variable(1e-3*torch.randn(k, num_ops), requires_grad=True)
     self._arch_parameters = [
       self.alphas_normal,
       self.alphas_reduce,
@@ -160,4 +165,34 @@ class Network(nn.Module):
       reduce=gene_reduce, reduce_concat=concat
     )
     return genotype
+
+  def sample_genotypes(self, sample):
+    def _parse():
+      gene_pool = []
+      valid_PRIM = PRIMITIVES[1:]
+      gene_normal = []
+      gene_reduce = []
+
+      for i in range(self._steps):
+        start_node = [i for  i in range(0, i+2)]
+        #for every step make 2 sample path
+        for i in range(2):
+          gene_normal.append((random.choice(valid_PRIM) , random.choice(start_node)) )        
+          gene_reduce.append((random.choice(valid_PRIM) , random.choice(start_node)) )        
+
+      concat = range(2+self._steps-self._multiplier, self._steps+2)      
+      return Genotype(
+        normal=gene_normal, normal_concat=concat,
+        reduce=gene_reduce, reduce_concat=concat
+      )
+    
+    genotypes = []
+    for _ in range(sample) :
+      genotype = _parse()
+      genotypes.append(genotype) 
+
+    genotypes.sort()
+    #remove duplicate
+    returnList = list(genotypes for genotypes,_ in itertools.groupby(genotypes))
+    return sorted(returnList)
 
