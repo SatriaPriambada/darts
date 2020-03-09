@@ -64,7 +64,6 @@ def generate_macro(dataset_name,
   else:
     logging.info('no gpu device available, use CPU')
   
-  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
   
   criterion = nn.CrossEntropyLoss()
   macro_network = MacroNetwork(init_channels, CIFAR_CLASSES, 
@@ -136,7 +135,7 @@ if __name__ == '__main__':
   dataset_name = 'cifar10'
   num_classes = 10
   filepath = "~/data/" + dataset_name
-  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+  device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
 
   print("Load Data from: {}".format(filepath))
   CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
