@@ -20,15 +20,16 @@ import acc_profiler
 import latency_profiler
 
 import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
+parser = argparse.ArgumentParser(prog='profile_macro_nn')
+parser.add_argument('-d', '--device', type=str, default='cpu-x6132', help='device used for profile')
 parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
 args = parser.parse_args()
 
+filename = "arch_profile"
 OPORTUNITY_GAP_ARCHITECTURE = "gen_latencies_architecture_op_gap.csv"
 CIFAR_INPUT_BATCH = 1
 CIFAR_INPUT_CHANNEL = 3
-CIFAR_INPUT_SIZE = 32
+CIFAR_INPUT_SIZE = 224
 
 def convert_str_to_CIFAR_Network(df, init_channels, layers, auxiliary):
     architectures = []
@@ -105,7 +106,12 @@ if __name__ == '__main__':
     dataset_name = 'cifar10'
     num_classes = 10
     filepath = "~/data/" + dataset_name
-    device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
+    if "gpu" in args.device:
+        print("profile on gpu")
+        device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
+    else:
+        print("profile on cpu")
+        device = torch.device('cpu')
 
     print("Load Data from: {}".format(filepath))
     CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
@@ -134,5 +140,5 @@ if __name__ == '__main__':
 
     model_df_with_acc_and_lat = profile_arch_lat_and_acc(dataset_name, 
         test_loader, sampled_architecture, criterion, device, drop_path_prob)
-    model_df_with_acc_and_lat.to_csv(Path(filename + '_architecture_{}.csv'.format(str(device))), 
+    model_df_with_acc_and_lat.to_csv(Path(filename + '_{}.csv'.format(str(device))), 
     index = None)
