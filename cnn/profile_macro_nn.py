@@ -22,7 +22,7 @@ import latency_profiler
 import argparse
 
 filename = "arch_profile"
-OPORTUNITY_GAP_ARCHITECTURE = "gen_latencies_architecture_i224.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
 INPUT_SIZE = 224
