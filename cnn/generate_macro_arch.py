@@ -33,6 +33,7 @@ log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
+load_filename = "generated_micro"
 filename = "generated_macro"
 NFAMILY = 8
 CIFAR_CLASSES = 10
@@ -64,7 +65,7 @@ def generate_macro(dataset_name,
     
   macro_network = MacroNetwork(init_channels, CIFAR_CLASSES, 
     layers, criterion, device=device)
-  micro_genotypes = pd.read_csv(filename + '_{}_center.csv'.format(str(device)))
+  micro_genotypes = pd.read_csv(load_filename + '_{}_center.csv'.format(str(device)))
   print(micro_genotypes) 
   sampled_architecture = macro_network.sample_architecture(dataset_name, NUM_SAMPLE, 
     micro_genotypes, init_channels, layers, n_family, auxiliary)
