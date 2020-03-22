@@ -12,6 +12,7 @@ from model import HeterogenousNetworkImageNet
 from model import HeterogenousNetworkCIFAR
 import random
 import itertools
+import re 
 
 class MacroNetwork(nn.Module):
 
@@ -90,40 +91,79 @@ class MacroNetwork(nn.Module):
   def arch_parameters(self):
     return self._arch_parameters
 
-  def sample_architecture(self, dataset_name, nsample, micro_genotypes, init_channels, 
-    layers, auxiliary):
+  def build_architecture(self,
+          dataset_name, 
+          arch_dict, 
+          init_channels,
+          layers, 
+          auxiliary, 
+          selected_layers):
+    if dataset_name == "cifar10":
+      CIFAR_CLASSES = 10
+      arch_dict.update({
+        "model": HeterogenousNetworkCIFAR(
+          init_channels, 
+          CIFAR_CLASSES, 
+          layers, 
+          auxiliary, 
+          selected_layers
+        )
+      })
+    elif dataset_name == "imagenet":
+      IMAGENET_CLASSES = 1000
+      arch_dict.update({
+        "model": HeterogenousNetworkImageNet(
+          init_channels, 
+          IMAGENET_CLASSES, 
+          layers, 
+          auxiliary, 
+          selected_layers
+        )
+      }) 
+    
+    return arch_dict
+
+  def sample_architecture(self, 
+                          dataset_name, 
+                          nsample, 
+                          micro_genotypes, 
+                          init_channels, 
+                          max_layers, 
+                          n_family, 
+                          auxiliary):
     architectures = []
     model_names = [] 
     valid_gen_choice = micro_genotypes['genotype'].tolist()
     valid_gen_choice.append("none")
-    for _ in range(nsample):
-      selected_layers = []
-      for i in range(layers):
-        selected_layers.append(random.choice(valid_gen_choice))
-      name = ';'.join([str(elem) for elem in selected_layers]) 
-      if dataset_name == "cifar10":
-        CIFAR_CLASSES = 10
-        architectures.append({
-          "name": name,
-          "model": HeterogenousNetworkCIFAR(
-            init_channels, 
-            CIFAR_CLASSES, 
-            layers, 
-            auxiliary, 
-            selected_layers
-          )
-        }) 
-      elif dataset_name == "imagenet":
-        IMAGENET_CLASSES = 1000
-        architectures.append({
-          "name": name,
-          "model": HeterogenousNetworkImageNet(
-            init_channels, 
-            IMAGENET_CLASSES, 
-            layers, 
-            auxiliary, 
-            selected_layers
-          )
-        }) 
+    ln_valid_choice = len(valid_gen_choice) - 1
+    for ifamily in range(1, n_family + 1):
+      valid_layer = int(ifamily * max_layers / n_family)
+      print("val layer: {}".format(valid_layer))
+      for _ in range(nsample):
+        selected_layers = []
+        selected_idx = []
+        for i in range(valid_layer):
+          rand_idx = random.randint(0, ln_valid_choice) 
+          selected_idx.append(rand_idx)
+          selected_layers.append(valid_gen_choice[rand_idx])
+        none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
+        name = ';'.join([str(elem) for elem in selected_layers]) 
+        skip_conn = [i.start() for i in re.finditer("skip", name)]
+        arch_dict = {
+          "selected_medioid_idx": selected_idx,
+          "cell_layers": valid_layer - len(none_layers),
+          "none_layers": len(none_layers),
+          "skip_conn": len(skip_conn),
+          "arch_gen_name": name
+        }
+
+        architectures.append(self.build_architecture(
+          dataset_name, 
+          arch_dict, 
+          init_channels,
+          valid_layer, 
+          auxiliary, 
+          selected_layers))
+
     return architectures
 

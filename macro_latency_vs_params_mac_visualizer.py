@@ -7,20 +7,14 @@ import numpy as np
 
 from matplotlib.patches import Patch
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--filename', nargs='+', type=str, default='gen_latencies_architecture_cpu-i7-4578U.csv', help='start system with test config')
-parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
-parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
-args = parser.parse_args()
-
-def device_color_code():
-    if args.device == 'cpu-i7-4578U':
+def device_color_code(device):
+    if device == 'cpu-i7-4578U':
         return "red"
-    elif args.device == 'gpu-rtx2080':
+    elif device == 'gpu-rtx2080':
         return "green"
-    elif args.device == 'gpu-v100':
+    elif device == 'gpu-v100':
         return "blue"
-    elif args.device == 'cpu-x6132':
+    elif device == 'cpu-x6132':
         return "brown"
 
 def draw_param_subplot(df, subplot, color):
@@ -46,16 +40,17 @@ def draw_mac_subplot(df, subplot, color):
     subplot.set_xlabel('macs(M)', fontsize=13)
     subplot.set_ylabel('latency(ms)', fontsize=13)
 
-def draw_errorbar_graph(df):
+def draw_errorbar_graph(file_name, device, path):
+    df = pd.read_csv(file_name)
     print(df)
-    print("start visualizing {} device {}".format(args.filename, args.device))
-    print("result image can be seen in path ./{}".format(args.path))
+    print("start visualizing for device {}".format(device))
+    print("result image can be seen in path ./{}".format(path))
     
     plt.figure(figsize=(8,5))
     plt.clf()
     labels = []
     figure, axes = plt.subplots(nrows=2, ncols=1)
-    color = device_color_code()
+    color = device_color_code(device)
     for i,row in enumerate(axes):
         if i == 0:
             draw_param_subplot(df, row, color)
@@ -65,14 +60,20 @@ def draw_errorbar_graph(df):
     figure.tight_layout(pad=0.3)
 
     #lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.,labels=labels)
-    plt.savefig(args.path + '/params_lat_{}.pdf'.format(args.device), ext='pdf', bbox_inches='tight')
-    plt.savefig(args.path + '/params_lat_{}.png'.format(args.device), ext='png', bbox_inches='tight')
+    plt.savefig(path + '/param_lat_{}.pdf'.format(device), ext='pdf', bbox_inches='tight')
+    plt.savefig(path + '/param_lat_{}.png'.format(device), ext='png', bbox_inches='tight')
     plt.show()
     
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--filename', nargs='+', type=str, default='gen_latencies_i224_architecture_cpu-i7-4578U.csv', help='start system with test config')
+    parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
+    parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
+    args = parser.parse_args()
     list_files = args.filename
-    for csv_file in list_files:
-        csv_path = csv_file
-        df = pd.read_csv(csv_path)
-        draw_errorbar_graph(df) 
+    if list_files is list:
+        for csv_file in list_files:
+            draw_errorbar_graph(csv_file, args.device, args.path) 
+    else:
+        draw_errorbar_graph(list_files, args.device, args.path) 

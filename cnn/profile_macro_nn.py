@@ -20,50 +20,40 @@ import acc_profiler
 import latency_profiler
 
 import argparse
-parser = argparse.ArgumentParser(prog='profile_macro_nn')
-parser.add_argument('-d', '--device', type=str, default='cpu-x6132', help='device used for profile')
-parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
-args = parser.parse_args()
 
 filename = "arch_profile"
-OPORTUNITY_GAP_ARCHITECTURE = "gen_latencies_architecture_op_gap.csv"
-CIFAR_INPUT_BATCH = 1
-CIFAR_INPUT_CHANNEL = 3
-CIFAR_INPUT_SIZE = 224
+OPORTUNITY_GAP_ARCHITECTURE = "gen_latencies_architecture_i224.csv"
+INPUT_BATCH = 1
+INPUT_CHANNEL = 3
+INPUT_SIZE = 224
 
 def convert_str_to_CIFAR_Network(df, init_channels, layers, auxiliary):
     architectures = []
-    list_arch_name = df["architecture_name"].tolist()
+    list_arch_name = df["arch_gen_name"].tolist()
     CIFAR_CLASSES = 10
-    for arch in list_arch_name:
+    for i, arch in enumerate(list_arch_name):
       selected_layers = arch.split(";")
       architectures.append({
           "name": arch,
+          "cell_layers": df.iloc[i]["cell_layers"],
+          "none_layers": df.iloc[i]["none_layers"],
+          "skip_conn": df.iloc[i]["skip_conn"],
           "model": HeterogenousNetworkCIFAR(
           init_channels, 
           CIFAR_CLASSES, 
           layers, 
           auxiliary, 
           selected_layers
-          )
+        )
       }) 
+    print(architectures)
     return architectures
 
 def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, criterion, device, drop_path_prob):
-  column = ['architecture',
-            'mean_lat',
-            'lat95',
-            'lat99',
-            'std_dev_lat',
-            'macs',
-            'params',
-            'acc']
-  df_with_lat = pd.DataFrame(columns=column)
   dict_list = []
-
   if dataset_name == "cifar10":
-    input = torch.zeros(CIFAR_INPUT_BATCH, CIFAR_INPUT_CHANNEL, 
-      CIFAR_INPUT_SIZE, CIFAR_INPUT_SIZE).to(device)
+    input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, 
+      INPUT_SIZE, INPUT_SIZE).to(device)
   else:
     sys.exit('Error!, dataset name not defined')
   
@@ -78,14 +68,17 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
     valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
 
     dict_list.append({
-        'architecture_name': architecture["name"],
+        'name': architecture["name"],
+        'acc': valid_acc,
         'mean_lat':mean_lat,
         'lat95':latencies[94],
         'lat99':latencies[98],
         'std_dev_lat': stdev(latencies),
         'macs':macs,
         'params':params,
-        'acc': valid_acc
+        'cell_layers': architecture["cell_layers"],
+        'none_layers': architecture["none_layers"],
+        'skip_conn': architecture["skip_conn"],
       })
   
     #print(architecture)
@@ -97,9 +90,15 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
+    parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
+    parser.add_argument('-l', '--layers', type=int, default=25, help='number of layers')
+
+    args = parser.parse_args()
     seed = 0
     init_channels = 36
-    layers = 12
+    layers = args.layers
     auxiliary = True
     drop_path_prob = 0.2
     data_path = '~/data/'
