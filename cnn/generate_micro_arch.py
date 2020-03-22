@@ -29,17 +29,25 @@ from architect import Architect
 import latency_profiler
 
 from pathlib import Path
+import argparse
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
-filename = "gen_latencies"
+filename = "generated_micro"
+# We assume that model latencies are not affected by input data from dataset 
+# Model latencies will be affected by batch size, input channel, and input size 
+# This micro architecture profile doesn't need exact latencies number, 
+# but it needs some comparison point between each genotypes. 
+# As long as the comparison is consistent,
+# the latencies comparison should be valid. 
+# We use CIFAR because it's fast  
 CIFAR_CLASSES = 10
-CIFAR_INPUT_BATCH = 1
-CIFAR_INPUT_CHANNEL = 3
-CIFAR_INPUT_SIZE = 32
-NUM_SAMPLE = 10
+INPUT_BATCH = 1
+INPUT_CHANNEL = 3
+INPUT_SIZE = 32
+NUM_SAMPLE = 300
 CLUSTERS = 8
 
 def generate_micro(seed, gpuid, init_channels, layers, auxiliary, drop_path_prob, device):
@@ -94,8 +102,8 @@ def profile_sample_latencies(sampled_genotypes, init_channels, layers,
     model = model.to(device)
     
     model.drop_path_prob = drop_path_prob
-    input = torch.zeros(CIFAR_INPUT_BATCH, CIFAR_INPUT_CHANNEL, 
-      CIFAR_INPUT_SIZE, CIFAR_INPUT_SIZE).to(device)
+    input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, 
+      INPUT_SIZE, INPUT_SIZE).to(device)
     macs, params = profile(model, inputs=(input, ))
     mean_lat, latencies = latency_profiler.test_latency(model, input, device)
     dict_list.append({
@@ -153,10 +161,14 @@ def test_latency(model, dummy_input, device):
   return (sum(measured_latency['sample']) / n_sample), sorted(measured_latency['sample'])
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-l', '--layers', type=int, default=25, help='number of layers')
+  args = parser.parse_args()
+
   seed = 0
   gpuid = 7 
   init_channels = 36
-  layers = 12
+  layers = args.layers
   auxiliary = False
   drop_path_prob = 0.2
   device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

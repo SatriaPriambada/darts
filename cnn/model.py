@@ -218,9 +218,14 @@ class HeterogenousNetworkCIFAR(nn.Module):
 
   def __init__(self, C, num_classes, layers, auxiliary, genotypes):
     super(HeterogenousNetworkCIFAR, self).__init__()
+    valid_layers = 0
     none_layers_idx = set([ i for i in range(len(genotypes)) if genotypes[i] == "none" ])
-    layers = layers - len(none_layers_idx)
-    self._layers = layers
+    if layers <= len(genotypes):
+      valid_layers = layers - len(none_layers_idx)
+    else:
+      valid_layers = len(genotypes) - len(none_layers_idx)
+    assert valid_layers >= 0
+    self._layers = valid_layers
     self._auxiliary = auxiliary
     stem_multiplier = 3
     C_curr = stem_multiplier * C
@@ -232,7 +237,7 @@ class HeterogenousNetworkCIFAR(nn.Module):
     C_prev_prev, C_prev, C_curr = C_curr, C_curr, C
     self.cells = nn.ModuleList()
     reduction_prev = False
-    for i in range(layers):
+    for i in range(self._layers):
       if i in none_layers_idx:
         continue
       else:
@@ -270,9 +275,14 @@ class HeterogenousNetworkImageNet(nn.Module):
 
   def __init__(self, C, num_classes, layers, auxiliary, genotypes):
     super(HeterogenousNetworkImageNet, self).__init__()
+    valid_layers = 0
     none_layers_idx = set([ i for i in range(len(genotypes)) if genotypes[i] == "none" ])
-    layers = layers - len(none_layers_idx)
-    self._layers = layers
+    if layers <= len(genotypes):
+      valid_layers = layers - len(none_layers_idx)
+    else:
+      valid_layers = len(genotypes) - len(none_layers_idx)
+    assert valid_layers > 0
+    self._layers = valid_layers
     self._auxiliary = auxiliary
 
     self.stem0 = nn.Sequential(
@@ -293,7 +303,7 @@ class HeterogenousNetworkImageNet(nn.Module):
 
     self.cells = nn.ModuleList()
     reduction_prev = True
-    for i in range(layers):
+    for i in range(self._layers):
       if i in none_layers_idx:
         continue
       else:
