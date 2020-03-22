@@ -27,21 +27,24 @@ from macro_model_search import MacroNetwork
 from architect import Architect
 from profile_macro_nn import profile_arch_lat_and_acc
 from pathlib import Path
+import argparse
 
 log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
-filename = "gen_latencies"
+filename = "generated_macro"
+NFAMILY = 8
 CIFAR_CLASSES = 10
-NUM_SAMPLE = 300
+NUM_SAMPLE = 125
 CLUSTERS = 8
 
 def generate_macro(dataset_name, 
                   test_loader,
                   seed, 
                   init_channels, 
-                  layers, 
+                  layers,
+                  n_family, 
                   auxiliary, 
                   drop_path_prob, 
                   device):
@@ -64,18 +67,23 @@ def generate_macro(dataset_name,
   micro_genotypes = pd.read_csv(filename + '_{}_center.csv'.format(str(device)))
   print(micro_genotypes) 
   sampled_architecture = macro_network.sample_architecture(dataset_name, NUM_SAMPLE, 
-    micro_genotypes, init_channels, layers, auxiliary)
-  model_df_with_acc_and_lat = profile_arch_lat_and_acc(dataset_name, 
-    test_loader, sampled_architecture, criterion, device, drop_path_prob)
-  model_df_with_acc_and_lat.to_csv(Path(filename + '_architecture_{}.csv'.format(str(device))), 
+    micro_genotypes, init_channels, layers, n_family, auxiliary)
+  df_arch = pd.DataFrame(sampled_architecture)
+  df_arch = df_arch.drop(columns=['model'])
+  print(df_arch)
+  df_arch.to_csv(Path(filename + '_architecture_{}_layers.csv'.format(str(device), str(args.layers))), 
    index = None)
 
-  return model_df_with_acc_and_lat
+  return df_arch
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-l', '--layers', type=int, default=25, help='number of layers')
+  args = parser.parse_args()
+
   seed = 0
   init_channels = 36
-  layers = 12
+  layers = args.layers
   auxiliary = True
   drop_path_prob = 0.2
   data_path = '~/data/'
@@ -102,6 +110,7 @@ if __name__ == '__main__':
     seed, 
     init_channels, 
     layers, 
+    NFAMILY,
     auxiliary,    
     drop_path_prob, 
     device) 
