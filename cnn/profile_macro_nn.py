@@ -15,7 +15,7 @@ from statistics import stdev
 
 from model import HeterogenousNetworkImageNet
 from model import HeterogenousNetworkCIFAR
-
+from model_trainable import convert_str_to_CIFAR_Network
 import acc_profiler 
 import latency_profiler
 
@@ -26,28 +26,30 @@ OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
 INPUT_SIZE = 224
+CIFAR_CLASSES = 10
 
-def convert_str_to_CIFAR_Network(df, init_channels, layers, auxiliary):
-    architectures = []
-    list_arch_name = df["arch_gen_name"].tolist()
-    CIFAR_CLASSES = 10
-    for i, arch in enumerate(list_arch_name):
-      selected_layers = arch.split(";")
-      architectures.append({
-          "name": arch,
-          "cell_layers": df.iloc[i]["cell_layers"],
-          "none_layers": df.iloc[i]["none_layers"],
-          "skip_conn": df.iloc[i]["skip_conn"],
-          "model": HeterogenousNetworkCIFAR(
-          init_channels, 
-          CIFAR_CLASSES, 
-          layers, 
-          auxiliary, 
-          selected_layers
-        )
-      }) 
-    print(architectures)
-    return architectures
+def connvert_df_to_list_arch(df,init_channels, layers, auxiliary, num_classes):
+  architectures = []
+  list_arch_name = df["name"].tolist()
+  for i, name in enumerate(list_arch_name):
+    selected_layers = name.split(";")
+    cell_layers = df.iloc[i]["cell_layers"]
+    none_layers = df.iloc[i]["none_layers"]
+    skip_conn = df.iloc[i]["skip_conn"]
+    architectures.append(
+      convert_str_to_CIFAR_Network(
+        name,
+        selected_layers, 
+        cell_layers,
+        none_layers,
+        skip_conn,
+        init_channels, 
+        layers, 
+        auxiliary,
+        num_classes
+      )
+    ) 
+  return architectures
 
 def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, criterion, device, drop_path_prob):
   dict_list = []
@@ -94,9 +96,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
     parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
     parser.add_argument('-l', '--layers', type=int, default=25, help='number of layers')
-
     args = parser.parse_args()
+
     seed = 0
+    np.random.seed(seed) 
     init_channels = 36
     layers = args.layers
     auxiliary = True
@@ -120,7 +123,8 @@ if __name__ == '__main__':
                                                 shuffle=True, num_workers=4)
 
     df_op_gap = pd.read_csv(OPORTUNITY_GAP_ARCHITECTURE)
-    sampled_architecture = convert_str_to_CIFAR_Network(df_op_gap, init_channels, layers, auxiliary)
+    sampled_architecture = connvert_df_to_list_arch(df_op_gap,
+      init_channels, layers, auxiliary, CIFAR_CLASSES)
   
     criterion = nn.CrossEntropyLoss()
     if torch.cuda.is_available():

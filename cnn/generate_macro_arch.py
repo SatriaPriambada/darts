@@ -15,9 +15,6 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 import pandas as pd
 
-from sklearn_extra.cluster import KMedoids
-from sklearn.decomposition import PCA
-
 import time
 import utils
 
