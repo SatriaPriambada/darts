@@ -39,7 +39,7 @@ class Cell(nn.Module):
       self._ops += [op]
     self._indices = indices
 
-  def forward(self, s0, s1, drop_prob):
+  def forward(self, s0, s1, drop_prob, device="cuda"):
     s0 = self.preprocess0(s0)
     s1 = self.preprocess1(s1)
 
@@ -53,9 +53,9 @@ class Cell(nn.Module):
       h2 = op2(h2)
       if self.training and drop_prob > 0.:
         if not isinstance(op1, Identity):
-          h1 = drop_path(h1, drop_prob)
+          h1 = drop_path(h1, drop_prob, device)
         if not isinstance(op2, Identity):
-          h2 = drop_path(h2, drop_prob)
+          h2 = drop_path(h2, drop_prob, device)
       s = h1 + h2
       states += [s]
     return torch.cat([states[i] for i in self._concat], dim=1)
@@ -205,7 +205,7 @@ class NetworkImageNet(nn.Module):
     s0 = self.stem0(input)
     s1 = self.stem1(s0)
     for i, cell in enumerate(self.cells):
-      s0, s1 = s1, cell(s0, s1, self.drop_path_prob)
+      s0, s1 = s1, cell(s0, s1, self.drop_path_prob, self.device)
       if i == 2 * self._layers // 3:
         if self._auxiliary and self.training:
           logits_aux = self.auxiliary_head(s1)
@@ -216,7 +216,7 @@ class NetworkImageNet(nn.Module):
 
 class HeterogenousNetworkCIFAR(nn.Module):
 
-  def __init__(self, C, num_classes, layers, auxiliary, genotypes):
+  def __init__(self, C, num_classes, layers, auxiliary, genotypes, device="cuda"):
     super(HeterogenousNetworkCIFAR, self).__init__()
     valid_layers = 0
     none_layers_idx = set([ i for i in range(len(genotypes)) if genotypes[i] == "none" ])
@@ -227,6 +227,7 @@ class HeterogenousNetworkCIFAR(nn.Module):
     assert valid_layers >= 0
     self._layers = valid_layers
     self._auxiliary = auxiliary
+    self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     stem_multiplier = 3
     C_curr = stem_multiplier * C
     self.stem = nn.Sequential(
@@ -262,7 +263,7 @@ class HeterogenousNetworkCIFAR(nn.Module):
     logits_aux = None
     s0 = s1 = self.stem(input)
     for i, cell in enumerate(self.cells):
-      s0, s1 = s1, cell(s0, s1, self.drop_path_prob)
+      s0, s1 = s1, cell(s0, s1, self.drop_path_prob, self.device)
       if i == 2 * self._layers//3:
         if self._auxiliary and self.training:
           logits_aux = self.auxiliary_head(s1)
@@ -271,9 +272,65 @@ class HeterogenousNetworkCIFAR(nn.Module):
     return logits, logits_aux
 
 
+
+class HeterogenousNetworkMNIST(nn.Module):
+
+  def __init__(self, C, num_classes, layers, auxiliary, genotypes, device="cuda"):
+    super(HeterogenousNetworkMNIST, self).__init__()
+    valid_layers = 0
+    none_layers_idx = set([ i for i in range(len(genotypes)) if genotypes[i] == "none" ])
+    if layers <= len(genotypes):
+      valid_layers = layers - len(none_layers_idx)
+    else:
+      valid_layers = len(genotypes) - len(none_layers_idx)
+    assert valid_layers >= 0
+    self._layers = valid_layers
+    self._auxiliary = auxiliary
+    self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    stem_multiplier = 3
+    C_curr = stem_multiplier * C
+    self.stem = nn.Sequential(
+      nn.Conv2d(1, C_curr, 3, padding=1, bias=False),
+      nn.BatchNorm2d(C_curr)
+    )
+    
+    C_prev_prev, C_prev, C_curr = C_curr, C_curr, C
+    self.cells = nn.ModuleList()
+    reduction_prev = False
+    for i in range(self._layers):
+      if i in none_layers_idx:
+        continue
+      else:
+        if i in [layers//3, 2*layers//3]:
+          C_curr *= 2
+          reduction = True
+        else:
+          reduction = False
+        cell = Cell(eval(genotypes[i]), C_prev_prev, C_prev, C_curr, reduction, reduction_prev)
+        reduction_prev = reduction
+        self.cells += [cell]
+        C_prev_prev, C_prev = C_prev, cell.multiplier*C_curr
+        if i == 2*layers//3:
+          C_to_auxiliary = C_prev
+          
+    if auxiliary:
+      self.auxiliary_head = AuxiliaryHeadCIFAR(C_prev, num_classes)
+    self.global_pooling = nn.AdaptiveAvgPool2d(1)
+    self.classifier = nn.Linear(C_prev, num_classes)
+
+  def forward(self, input):
+    logits_aux = None
+    s0 = s1 = self.stem(input)
+    for i, cell in enumerate(self.cells):
+      s0, s1 = s1, cell(s0, s1, self.drop_path_prob, self.device)
+    out = self.global_pooling(s1)
+    logits = self.classifier(out.view(out.size(0),-1))
+    return logits, logits_aux
+
+
 class HeterogenousNetworkImageNet(nn.Module):
 
-  def __init__(self, C, num_classes, layers, auxiliary, genotypes):
+  def __init__(self, C, num_classes, layers, auxiliary, genotypes, device="cuda"):
     super(HeterogenousNetworkImageNet, self).__init__()
     valid_layers = 0
     none_layers_idx = set([ i for i in range(len(genotypes)) if genotypes[i] == "none" ])
@@ -284,6 +341,7 @@ class HeterogenousNetworkImageNet(nn.Module):
     assert valid_layers > 0
     self._layers = valid_layers
     self._auxiliary = auxiliary
+    self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     self.stem0 = nn.Sequential(
       nn.Conv2d(3, C // 2, kernel_size=3, stride=2, padding=1, bias=False),

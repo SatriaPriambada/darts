@@ -154,7 +154,7 @@ class MacroNetwork(nn.Module):
           "cell_layers": valid_layer - len(none_layers),
           "none_layers": len(none_layers),
           "skip_conn": len(skip_conn),
-          "arch_gen_name": name
+          "name": name
         }
 
         architectures.append(self.build_architecture(
