@@ -22,11 +22,11 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use("ggplot")
 from na_scheduler import NAScheduler
+from ray.tune.schedulers import AsyncHyperBandScheduler
 
 from model import HeterogenousNetworkImageNet
 from model import HeterogenousNetworkCIFAR
 from model import HeterogenousNetworkMNIST
-
 
 dset.MNIST("~/data", train=True, download=True)
 dset.CIFAR10("~/data", train=True, download=True)
@@ -57,7 +57,7 @@ async def per_res_train(device,
         #     "cpu": 1
         # },
         verbose=1,
-        name="trial_train_mnist"  # This is used to specify the logging directory.
+        name="train_heterogenous_mnist"  # This is used to specify the logging directory.
     )
 
     print('Finishing GPU: {}'.format(device_id))
@@ -89,7 +89,8 @@ async def async_train(device,
 
 def train_mnist(config):
     model = ConvNet()
-    print(config["architecture"])
+    logfile = open("log.txt","w")
+    logfile.write("[Tio]AAAA {}".format(config["architecture"]))
     train_loader, test_loader = get_data_loaders()
 
     optimizer = optim.SGD(
@@ -102,10 +103,14 @@ def train_mnist(config):
         tune.track.log(mean_accuracy=acc)
         if i % 5 == 0:
             torch.save(model, "./{}.pth".format(config["model_name"])) # This saves the model to the trial directory
-
+    logfile.close()
 
 def train_heterogenous_network_mnist(config):
     model_name = config["architecture"]["name"]
+
+    logfile = open("log.txt","w")
+    logfile.write("[Tio] inside here Test Logging Info")
+    #logfile.write("[Tio] training model {}".format(model_name))
     selected_layers = model_name.split(";")
     model = HeterogenousNetworkMNIST(
         config["architecture"]["init_channels"], 
@@ -120,25 +125,73 @@ def train_heterogenous_network_mnist(config):
 
     optimizer = optim.SGD(
         model.parameters(), lr=config["lr"], momentum=config["momentum"])
+    best_acc = 0
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    for i in range(10):
-        # Train for 1 epoch
-        model.train()
-        for batch_idx, (data, target) in enumerate(train_loader):
-            if batch_idx * len(data) > EPOCH_SIZE:
-                return
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            data, target = data.to(device), target.to(device)
-            optimizer.zero_grad()
-            output, _ = model(data)
-            loss = F.nll_loss(output, target)
-            loss.backward()
-            optimizer.step()
+    for epoch in range(10):
+        logfile.write("[Tio] epoch {}\n".format(epoch))
+        logfile.flush()
+        # Train model to get accuracy.
+        logfile.write("start training epoch {} \n".format(epoch))
+        logfile.flush()
+        torch_1_v_4_train(epoch, model, optimizer, train_loader, logfile, device)
         # Obtain validation accuracy.
-        acc = test(model, test_loader)  
+        logfile.write("start test epoch {} \n".format(epoch))
+        logfile.flush()
+        acc = torch_1_v_4_test(epoch, model, test_loader, logfile, device)  
+        logfile.write("[Tio] acc {}".format(acc))
+        logfile.flush()
         tune.track.log(mean_accuracy=acc)
-        if i % 5 == 0:
-            torch.save(model, "./{}.pth".format(config["model_name"])) # This saves the model to the trial directory
+        torch.save(model, "./checkpoint_{}.pth".format(config["architecture"]["id"]))
+        if acc > best_acc:
+            best_acc = acc
+            torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
+
+    logfile.close()
+
+def torch_1_v_4_train(epoch, model, optimizer, train_loader, logfile, device=torch.device("cpu")):
+    model.to(device)
+    model.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
+        logfile.flush()
+        if batch_idx * len(data) > EPOCH_SIZE:
+            logfile.write("break epoch: {} on batchid: {}\n".format(epoch, batch_idx))
+            break
+        logfile.write("valid batch\n")
+        logfile.flush()
+        data, target = data.to(device), target.to(device)
+        logfile.write("data {}, target {} \n".format(data, target))
+        logfile.flush()
+        optimizer.zero_grad()
+        output, _ = model(data)
+        loss = F.nll_loss(output, target)
+        logfile.write("loss {} \n".format(loss))
+        logfile.flush()
+        loss.backward()
+        optimizer.step()
+        logfile.write("optimizer step \n")
+        logfile.flush()
+
+def torch_1_v_4_test(epoch, model, test_loader, logfile, device=torch.device("cpu")):
+    model.to(device)
+    model.eval()
+    correct = 0
+    total = 0
+    logfile.write("start test\n")
+    logfile.flush()
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            if batch_idx * len(data) > TEST_SIZE:
+                break
+            data, target = data.to(device), target.to(device)
+            outputs, _ = model(data)
+            _, predicted = torch.max(outputs.data, 1)
+            total += target.size(0)
+            correct += (predicted == target).sum().item()
+    logfile.write("finish test\n")
+    logfile.flush()
+    return correct / total
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -162,6 +215,7 @@ if __name__ == '__main__':
         init_channels, layers, auxiliary, num_classes)
 
     model_architectures = [{
+            "id": i,
             "name": arch['name'],
             "cell_layers": arch["cell_layers"],
             "none_layers": arch["none_layers"],
@@ -172,17 +226,17 @@ if __name__ == '__main__':
             "drop_path_prob": drop_path_prob,
             "num_classes": num_classes
         } 
-        for arch in sampled_architecture
+        for i, arch in enumerate(sampled_architecture)
     ]
 
     hyperparameter_space = {
         "model_name": "train_mnist",
         "architecture": tune.grid_search(model_architectures),
-        "lr": tune.grid_search([0.9]),
+        "lr": tune.grid_search([0.001]),
         "momentum":  tune.grid_search([0.9])
     }
 
-    sched = NAScheduler(
+    sched = AsyncHyperBandScheduler(
         metric='mean_accuracy',
         mode="max",
         grace_period=1,
