@@ -42,7 +42,6 @@ import async_timeout
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 512
-TEST_SIZE = 256
 
 async def per_res_train(device, 
         device_id, 
@@ -91,70 +90,20 @@ async def async_train(device,
 
 CIFAR_CLASSES = 10
 
-def main():
-  if not torch.cuda.is_available():
-    logging.info('no gpu device available')
-    sys.exit(1)
-
-  np.random.seed(args.seed)
-  torch.cuda.set_device(args.gpu)
-  cudnn.benchmark = True
-  torch.manual_seed(args.seed)
-  cudnn.enabled=True
-  torch.cuda.manual_seed(args.seed)
-  logging.info('gpu device = %d' % args.gpu)
-  logging.info("args = %s", args)
-
-  genotype = eval("genotypes.%s" % args.arch)
-  model = Network(args.init_channels, CIFAR_CLASSES, args.layers, args.auxiliary, genotype)
-  model = model.cuda()
-
-  logging.info("param size = %fMB", utils.count_parameters_in_MB(model))
-
-  criterion = nn.CrossEntropyLoss()
-  criterion = criterion.cuda()
-  optimizer = torch.optim.SGD(
-      model.parameters(),
-      args.learning_rate,
-      momentum=args.momentum,
-      weight_decay=args.weight_decay
-      )
-
-  train_transform, valid_transform = utils._data_transforms_cifar10(args)
-  train_data = dset.CIFAR10(root=args.data, train=True, download=True, transform=train_transform)
-  valid_data = dset.CIFAR10(root=args.data, train=False, download=True, transform=valid_transform)
-
-  train_queue = torch.utils.data.DataLoader(
-      train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=2)
-
-  valid_queue = torch.utils.data.DataLoader(
-      valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=2)
-
-  scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(args.epochs))
-
-  for epoch in range(args.epochs):
-    scheduler.step()
-    logging.info('epoch %d lr %e', epoch, scheduler.get_lr()[0])
-    model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
-
-    train_acc, train_obj = train(train_queue, model, criterion, optimizer)
-    logging.info('train_acc %f', train_acc)
-
-    valid_acc, valid_obj = infer(valid_queue, model, criterion)
-    logging.info('valid_acc %f', valid_acc)
-
-    utils.save(model, os.path.join(args.save, 'weights.pt'))  
-
-def get_data_loaders():
+def get_data_loaders(cell_layers):
   train_transform, valid_transform = utils._data_transforms_cifar10(args)
   train_data = dset.CIFAR10(root="~/data", train=True, download=True, transform=train_transform)
   valid_data = dset.CIFAR10(root="~/data", train=False, download=True, transform=valid_transform)
-
+  batch_size = EPOCH_SIZE
+  if cell_layers > 9:
+    batch_size = 64
+  elif cell_layers > 12:
+    batch_size = 1
   train_loader = torch.utils.data.DataLoader(
-      train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=2)
+      train_data, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=2)
 
   test_loader = torch.utils.data.DataLoader(
-      valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=2)
+      valid_data, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=2)
   return train_loader, test_loader
 
 def train_heterogenous_network_cifar(config):
@@ -173,7 +122,7 @@ def train_heterogenous_network_cifar(config):
   )
   model.drop_path_prob = config["architecture"]["drop_path_prob"]
   
-  train_loader, test_loader = get_data_loaders()
+  train_loader, test_loader = get_data_loaders(config["architecture"]["cell_layers"])
 
   optimizer = optim.SGD(
       model.parameters(), lr=config["lr"], momentum=config["momentum"])
@@ -182,7 +131,7 @@ def train_heterogenous_network_cifar(config):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   criterion = nn.CrossEntropyLoss()
   criterion = criterion.cuda()
-  for epoch in range(10):
+  for epoch in range(50):
     logfile.write("[Tio] epoch {}\n".format(epoch))
     logfile.flush()
     scheduler.step()
@@ -327,7 +276,7 @@ if __name__ == '__main__':
       "momentum":  tune.grid_search([args.momentum])
   }
 
-  sched = AsyncHyperBandScheduler(
+  sched = NAScheduler(
       metric='mean_accuracy',
       mode="max",
       grace_period=1,
@@ -347,5 +296,3 @@ if __name__ == '__main__':
   print(f"Execution time: { time.time() - _start }")
   loop.close()
   
-#  main() 
-
