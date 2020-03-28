@@ -12,8 +12,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.datasets as dset
-from ray.tune.examples.mnist_pytorch import train, test, ConvNet, get_data_loaders
-from model_trainable import TrainHeteroNetCIFAR
 import ray
 from ray import tune
 from ray.tune import track
@@ -23,13 +21,10 @@ import matplotlib.style as style
 style.use("ggplot")
 from na_scheduler import NAScheduler
 from ray.tune.schedulers import AsyncHyperBandScheduler
-
-from model import HeterogenousNetworkImageNet
-from model import HeterogenousNetworkCIFAR
+from ray.tune.examples.mnist_pytorch import train, test, ConvNet, get_data_loaders
 from model import HeterogenousNetworkMNIST
 
 dset.MNIST("~/data", train=True, download=True)
-dset.CIFAR10("~/data", train=True, download=True)
 import asyncio
 import sys
 import time
