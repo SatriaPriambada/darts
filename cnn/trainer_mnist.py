@@ -38,6 +38,7 @@ from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+# OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 512
 TEST_SIZE = 256
@@ -53,11 +54,11 @@ async def per_res_train(device,
         train_heterogenous_network_mnist, 
         scheduler=sched, 
         config=hyperparameter_space, 
-        # resources_per_trial={
-        #     "cpu": 1
-        # },
+        resources_per_trial={
+            "gpu": 1
+        },
         verbose=1,
-        name="train_heterogenous_mnist"  # This is used to specify the logging directory.
+        name="na_train_hetero_mnist"  # This is used to specify the logging directory.
     )
 
     print('Finishing GPU: {}'.format(device_id))
@@ -90,7 +91,6 @@ async def async_train(device,
 def train_mnist(config):
     model = ConvNet()
     logfile = open("log.txt","w")
-    logfile.write("[Tio]AAAA {}".format(config["architecture"]))
     train_loader, test_loader = get_data_loaders()
 
     optimizer = optim.SGD(
@@ -128,7 +128,7 @@ def train_heterogenous_network_mnist(config):
     best_acc = 0
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    for epoch in range(10):
+    for epoch in range(100):
         logfile.write("[Tio] epoch {}\n".format(epoch))
         logfile.flush()
         # Train model to get accuracy.
@@ -153,10 +153,8 @@ def torch_1_v_4_train(epoch, model, optimizer, train_loader, logfile, device=tor
     model.to(device)
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
         logfile.flush()
         if batch_idx * len(data) > EPOCH_SIZE:
-            logfile.write("break epoch: {} on batchid: {}\n".format(epoch, batch_idx))
             break
         logfile.write("valid batch\n")
         logfile.flush()
@@ -236,7 +234,7 @@ if __name__ == '__main__':
         "momentum":  tune.grid_search([0.9])
     }
 
-    sched = AsyncHyperBandScheduler(
+    sched = NAScheduler(
         metric='mean_accuracy',
         mode="max",
         grace_period=1,
