@@ -55,9 +55,9 @@ async def per_res_train(device,
         train_heterogenous_network_cifar, 
         scheduler=sched, 
         config=hyperparameter_space, 
-        # resources_per_trial={
-        #     "cpu": 1
-        # },
+        resources_per_trial={
+            "gpu": 1
+        },
         verbose=1,
         name="train_heterogenous_network_cifar"  # This is used to specify the logging directory.
     )
@@ -147,15 +147,15 @@ def main():
 
 def get_data_loaders():
   train_transform, valid_transform = utils._data_transforms_cifar10(args)
-  train_data = dset.CIFAR10(root=args.data, train=True, download=True, transform=train_transform)
-  valid_data = dset.CIFAR10(root=args.data, train=False, download=True, transform=valid_transform)
+  train_data = dset.CIFAR10(root="~/data", train=True, download=True, transform=train_transform)
+  valid_data = dset.CIFAR10(root="~/data", train=False, download=True, transform=valid_transform)
 
-  train_queue = torch.utils.data.DataLoader(
+  train_loader = torch.utils.data.DataLoader(
       train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=2)
 
-  valid_queue = torch.utils.data.DataLoader(
+  test_loader = torch.utils.data.DataLoader(
       valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=2)
-
+  return train_loader, test_loader
 
 def train_heterogenous_network_cifar(config):
   model_name = config["architecture"]["name"]
@@ -174,13 +174,14 @@ def train_heterogenous_network_cifar(config):
   model.drop_path_prob = config["architecture"]["drop_path_prob"]
   
   train_loader, test_loader = get_data_loaders()
-  scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(args.epochs))
 
   optimizer = optim.SGD(
       model.parameters(), lr=config["lr"], momentum=config["momentum"])
+  scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(args.epochs))
   best_acc = 0
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+  criterion = nn.CrossEntropyLoss()
+  criterion = criterion.cuda()
   for epoch in range(10):
     logfile.write("[Tio] epoch {}\n".format(epoch))
     logfile.flush()
@@ -189,11 +190,11 @@ def train_heterogenous_network_cifar(config):
     # Train model to get accuracy.
     logfile.write("start training epoch {} \n".format(epoch))
     logfile.flush()
-    train_acc, _ = torch_1_v_4_train(epoch, model, optimizer, train_loader, logfile, device)
+    train_acc, _ = torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile, device, config["architecture"]["auxiliary"])
     # Obtain validation accuracy.
     logfile.write("start test epoch {} \n".format(epoch))
     logfile.flush()
-    acc, _ = torch_1_v_4_test(epoch, model, test_loader, logfile, device)  
+    acc, _ = torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)  
     logfile.write("[Tio] acc {}".format(acc))
     logfile.flush()
     tune.track.log(mean_accuracy=acc)
@@ -204,43 +205,44 @@ def train_heterogenous_network_cifar(config):
 
   logfile.close()
 
-def torch_1_v_4_train(epoch, model, optimizer, train_loader, logfile, device=torch.device("cpu")):
+def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile, device=torch.device("cpu"), auxiliary=True):
     model.to(device)
     model.train()
     objs = utils.AvgrageMeter()
     top1 = utils.AvgrageMeter()
     top5 = utils.AvgrageMeter()
 
-    for step, (data, target) in enumerate(train_queue):
+    for batch_idx, (data, target) in enumerate(train_loader):
       logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
       logfile.flush()
       
-      data = Variable.to(device)
+      data = Variable(data).to(device)
       target = Variable(target).to(device)
 
       optimizer.zero_grad()
       logits, logits_aux = model(data)
       loss = criterion(logits, target)
-      if args.auxiliary:
+      if auxiliary:
         loss_aux = criterion(logits_aux, target)
-        loss += args.auxiliary_weight*loss_aux
+        loss += auxiliary_weight*loss_aux
       loss.backward()
       logfile.write("loss {} \n".format(loss))
       logfile.flush()
-      nn.utils.clip_grad_norm(model.parameters(), args.grad_clip)
+      grad_clip = 5
+      nn.utils.clip_grad_norm(model.parameters(), grad_clip)
       optimizer.step()
 
       prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
       n = data.size(0)
-      objs.update(loss.data[0], n)
-      top1.update(prec1.data[0], n)
-      top5.update(prec5.data[0], n)
-      logfile.write("train %03d %e %f %f".format(step, objs.avg, top1.avg, top5.avg))
+      objs.update(loss.item(), n)
+      top1.update(prec1.item(), n)
+      top5.update(prec5.item(), n)
+      logfile.write("train %03d %e %f %f".format(batch_idx, objs.avg, top1.avg, top5.avg))
       logfile.flush()
 
     return top1.avg, objs.avg
 
-def torch_1_v_4_test(epoch, model, test_loader, logfile, device=torch.device("cpu")):
+def torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device=torch.device("cpu")):
     model.to(device)
     model.eval()
     logfile.write("start test\n")
@@ -249,7 +251,7 @@ def torch_1_v_4_test(epoch, model, test_loader, logfile, device=torch.device("cp
     top1 = utils.AvgrageMeter()
     top5 = utils.AvgrageMeter()
 
-    for step, (data, target) in enumerate(valid_queue):
+    for batch_idx, (data, target) in enumerate(test_loader):
       data = Variable(data).to(device)
       target = Variable(target).to(device)
 
@@ -258,13 +260,12 @@ def torch_1_v_4_test(epoch, model, test_loader, logfile, device=torch.device("cp
 
       prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
       n = data.size(0)
-      objs.update(loss.data[0], n)
-      top1.update(prec1.data[0], n)
-      top5.update(prec5.data[0], n)
+      objs.update(loss.item(), n)
+      top1.update(prec1.item(), n)
+      top5.update(prec5.item(), n)
 
-      if step % args.report_freq == 0:
-        logging.info('valid %03d %e %f %f', step, objs.avg, top1.avg, top5.avg)
-
+      logfile.write('valid %03d %e %f %f'.format(batch_idx, objs.avg, top1.avg, top5.avg))
+      logfile.flush()
     return top1.avg, objs.avg
 
 if __name__ == '__main__':
