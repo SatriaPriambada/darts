@@ -12,8 +12,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.datasets as dset
-from ray.tune.examples.mnist_pytorch import train, test, ConvNet, get_data_loaders
-from model_trainable import TrainHeteroNetCIFAR
 import ray
 from ray import tune
 from ray.tune import track
@@ -23,13 +21,10 @@ import matplotlib.style as style
 style.use("ggplot")
 from na_scheduler import NAScheduler
 from ray.tune.schedulers import AsyncHyperBandScheduler
-
-from model import HeterogenousNetworkImageNet
-from model import HeterogenousNetworkCIFAR
+from ray.tune.examples.mnist_pytorch import train, test, ConvNet, get_data_loaders
 from model import HeterogenousNetworkMNIST
 
 dset.MNIST("~/data", train=True, download=True)
-dset.CIFAR10("~/data", train=True, download=True)
 import asyncio
 import sys
 import time
@@ -41,6 +36,7 @@ gpu_devices = "1,2,3,4,5,6,7"
 os.environ["CUDA_VISIBLE_DEVICES"] = gpu_devices
 
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+# OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 512
 TEST_SIZE = 256
@@ -60,7 +56,7 @@ async def per_res_train(device,
             "gpu": 1
         },
         verbose=1,
-        name="train_heterogenous_mnist"  # This is used to specify the logging directory.
+        name="na_train_hetero_mnist"  # This is used to specify the logging directory.
     )
 
     print('Finishing GPU: {}'.format(device_id))
@@ -93,7 +89,6 @@ async def async_train(device,
 def train_mnist(config):
     model = ConvNet()
     logfile = open("log.txt","w")
-    logfile.write("[Tio]AAAA {}".format(config["architecture"]))
     train_loader, test_loader = get_data_loaders()
 
     optimizer = optim.SGD(
@@ -131,7 +126,7 @@ def train_heterogenous_network_mnist(config):
     best_acc = 0
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    for epoch in range(10):
+    for epoch in range(100):
         logfile.write("[Tio] epoch {}\n".format(epoch))
         logfile.flush()
         # Train model to get accuracy.
@@ -156,10 +151,8 @@ def torch_1_v_4_train(epoch, model, optimizer, train_loader, logfile, device=tor
     model.to(device)
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
         logfile.flush()
         if batch_idx * len(data) > EPOCH_SIZE:
-            logfile.write("break epoch: {} on batchid: {}\n".format(epoch, batch_idx))
             break
         logfile.write("valid batch\n")
         logfile.flush()
