@@ -36,6 +36,9 @@ import time
 import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
+import os
+gpu_devices = "1,2,3,4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = gpu_devices
 
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
 # Change these values if you want the training to run quicker or slower.
@@ -53,9 +56,9 @@ async def per_res_train(device,
         train_heterogenous_network_mnist, 
         scheduler=sched, 
         config=hyperparameter_space, 
-        # resources_per_trial={
-        #     "cpu": 1
-        # },
+        resources_per_trial={
+            "gpu": 1
+        },
         verbose=1,
         name="train_heterogenous_mnist"  # This is used to specify the logging directory.
     )
@@ -236,7 +239,7 @@ if __name__ == '__main__':
         "momentum":  tune.grid_search([0.9])
     }
 
-    sched = AsyncHyperBandScheduler(
+    sched = NAScheduler(
         metric='mean_accuracy',
         mode="max",
         grace_period=1,
