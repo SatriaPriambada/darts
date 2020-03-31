@@ -125,7 +125,7 @@ def train_heterogenous_network_cifar(config):
     model_name = config["architecture"]["name"]
 
     logfile = open("log.txt","w")
-    logfile.write("[Tio] inside here Test Logging Info")
+    logfile.write("[Tio] log for architecture id {}".format(config["architecture"]["id"]))
     #logfile.write("[Tio] training model {}".format(model_name))
     selected_layers = model_name.split(";")
     model = HeterogenousNetworkCIFAR(
@@ -147,8 +147,6 @@ def train_heterogenous_network_cifar(config):
     criterion = nn.CrossEntropyLoss()
     criterion = criterion.cuda()
     for epoch in range(50):
-      logfile.write("[Tio] epoch {}\n".format(epoch))
-      logfile.flush()
       scheduler.step()
       model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
       # Train model to get accuracy.
