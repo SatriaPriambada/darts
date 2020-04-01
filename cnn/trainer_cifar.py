@@ -39,7 +39,7 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "arch_below_12.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 128
 
@@ -284,7 +284,7 @@ if __name__ == '__main__':
         for i, arch in enumerate(sampled_architecture)
     ]
 
-    n_family = 2
+    n_family = 8
 
     sched = NAScheduler(
         metric='mean_accuracy',
