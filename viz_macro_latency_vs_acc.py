@@ -27,7 +27,6 @@ def draw_acc_subplot(df, subplot, color):
     subplot.set_xlabel('latency(ms)', fontsize=13)
 
     locs = subplot.get_xticks() 
-    print(locs)
     x_ticklabels = [str(i) for i in locs ]
     subplot.set_xticklabels(x_ticklabels)
 
@@ -48,8 +47,12 @@ def draw_errorbar_graph(file_name, device, path):
     figure.tight_layout(pad=0.3)
 
     #lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.,labels=labels)
-    plt.savefig(path + '/acc_lat_{}.pdf'.format(device), ext='pdf', bbox_inches='tight')
-    plt.savefig(path + '/acc_lat_{}.png'.format(device), ext='png', bbox_inches='tight')
+    save_name = path + '/acc_lat_{}'.format(device)
+    if (args.latency_only):
+        print("latency only graph")
+        save_name = path + '/lat_only_{}'.format(device)
+    plt.savefig(save_name + ".pdf", ext='pdf', bbox_inches='tight')
+    plt.savefig(save_name + ".png", ext='png', bbox_inches='tight')
     plt.show()
     
 
@@ -58,6 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--filename', nargs='+', type=str, default='arch_profile_cpu.csv', help='start system with test config')
     parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
     parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
+    parser.add_argument('--latency_only', action='store_true', default=False)
     args = parser.parse_args()
     list_files = args.filename
     if type(list_files) is list:
