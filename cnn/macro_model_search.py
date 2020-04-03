@@ -13,6 +13,7 @@ from model import HeterogenousNetworkCIFAR
 import random
 import itertools
 import re 
+import mcts
 
 class MacroNetwork(nn.Module):
 
@@ -166,4 +167,75 @@ class MacroNetwork(nn.Module):
           selected_layers))
 
     return architectures
+
+      
+  def sample_mcts_architecture(self, 
+                          dataset_name, 
+                          nsample, 
+                          micro_genotypes, 
+                          init_channels, 
+                          max_layers, 
+                          n_family, 
+                          auxiliary):
+    architectures = []
+    model_names = [] 
+    valid_gen_choice = micro_genotypes['genotype'].tolist()
+    valid_gen_choice.append("none")
+
+    ln_valid_choice = len(valid_gen_choice) - 1
+
+    #print("HERE {}".format(valid_gen_choice))
+    num_sims = 3
+    levels = 3
+    arch_dict = {}
+    current_node = mcts.Node(mcts.State(value=0, moves=[], turn=10))
+    for l in range(levels):
+      current_node = mcts.UCTSEARCH(num_sims / (l+1), current_node)
+      print("level %d"%l)
+      print("Num Children: %d"%len(current_node.children))
+      for i,c in enumerate(current_node.children):
+        print(i,c)
+      print("Best Child: %s"% current_node.state)
+      print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
+      selected_layers = current_node.state.moves
+      print("selected {}".format(selected_layers))
+      arch_dict.update({
+        "model": HeterogenousNetworkCIFAR(
+          init_channels, 
+          10, 
+          len(selected_layers), 
+          auxiliary, 
+          selected_layers
+        )
+      })
+    print(len(arch_dict), ";;; arch dict ", arch_dict)
+    return arch_dict
+    # for ifamily in range(1, n_family + 1):
+    #   valid_layer = int(ifamily * max_layers / n_family)
+    #   print("val layer: {}".format(valid_layer))
+    #   for _ in range(nsample):
+    #     selected_layers = []
+    #     selected_idx = []
+    #     for i in range(valid_layer):
+    #       rand_idx = random.randint(0, ln_valid_choice) 
+    #       selected_idx.append(rand_idx)
+    #       selected_layers.append(valid_gen_choice[rand_idx])
+    #     none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
+    #     name = ';'.join([str(elem) for elem in selected_layers]) 
+    #     skip_conn = [i.start() for i in re.finditer("skip", name)]
+    #     arch_dict = {
+    #       "selected_medioid_idx": selected_idx,
+    #       "cell_layers": valid_layer - len(none_layers),
+    #       "none_layers": len(none_layers),
+    #       "skip_conn": len(skip_conn),
+    #       "name": name
+    #     }
+
+    #     architectures.append(self.build_architecture(
+    #       dataset_name, 
+    #       arch_dict, 
+    #       init_channels,
+    #       valid_layer, 
+    #       auxiliary, 
+    #       selected_layers))
 
