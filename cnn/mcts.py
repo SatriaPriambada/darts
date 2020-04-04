@@ -31,19 +31,17 @@ class State():
 		self.value = value
 		self.turn = turn
 		self.moves = []
+		self.target_latency = [7, 12, 25] #ms
 		# print("__init called __ {}".format(self.moves))
 
 	def next_state(self):
 		nextmove = []
-		#print(self.MOVES)
 		for i in range(self.turn):
-			#print(i)
 			nextmove.append(random.choice(self.MOVES))
 		print("Current nextmove: {} {}".format(nextmove, type(nextmove)))
 		
 		self.moves += nextmove
 		next = State(self.value , self.moves, self.turn - 1)
-		# print("after UPDATE: ", next.moves)
 		return next
 
 	def terminal(self):
@@ -51,16 +49,30 @@ class State():
 			return True
 		return False
 
+	def get_accuracy(self):
+		return 100 #person
+
+	def get_latency(self):
+		return 10 #ms
+
 	def reward(self):
-		r = 1.0-(abs(self.value-self.GOAL)/self.MAX_VALUE)
+		w = 0.5
+		acc = self.get_accuracy()
+		l_t = self.target_latency
+		lat = self.get_latency()
+		lat_part = 1
+		for strata in l_t:
+			lat_part = lat_part * abs((1 - (lat / strata))) ** (1 - w)
+		acc_part = abs((1 - (acc/100))) ** w
+		r = 1 - (acc_part * lat_part)
+		print("r: ", r, ", type: ", type(r))
 		return r
-	
-	
 
 class Node():
 	def __init__(self, state, parent=None):
 		self.visits = 1
 		self.reward = 0.0	
+		self.latency = 0
 		self.state = state
 		self.children = []
 		self.parent = parent
@@ -69,8 +81,9 @@ class Node():
 		child = Node(child_state,self)
 		self.children.append(child)
 
-	def update(self,reward):
+	def update(self,reward, latest_latency):
 		self.reward += reward
+		self.latency = latest_latency
 		self.visits += 1 
 
 	def fully_expanded(self):
@@ -86,13 +99,13 @@ class Node():
 
 def UCTSEARCH(budget,root):
 	for iter in range(int(budget)):
-		if iter%10000==9999:
-			logger.info("simulation: %d"%iter)
-			logger.info(root)
+		if (iter % 10000) == 9999:
+			print("simulation: %d"%iter)
+			print(root)
 		front = TREEPOLICY(root)
-		reward = DEFAULTPOLICY(front.state)
-		BACKUP(front,reward)
-	return BESTCHILD(root,0)
+		reward, latest_latency = DEFAULTPOLICY(front.state)
+		BACKUP(front, reward, latest_latency)
+	return BESTCHILD(root, 0)
 
 def TREEPOLICY(node):
 	#a hack to force 'exploitation' in a game where there are many options, and you may never/not want to fully expand first
@@ -100,7 +113,7 @@ def TREEPOLICY(node):
 		if len(node.children) == 0:
 			return EXPAND(node)
 		elif random.uniform(0,1) < .5:
-			node=BESTCHILD(node,SCALAR)
+			node = BESTCHILD(node,SCALAR)
 		else:
 			if node.fully_expanded() == False:	
 				return EXPAND(node)
@@ -118,31 +131,35 @@ def EXPAND(node):
 
 #current this uses the most vanilla MCTS formula it is worth experimenting with THRESHOLD ASCENT (TAGS)
 def BESTCHILD(node,scalar):
-	bestscore=0.0
-	bestchildren=[]
+	bestscore = 0.0
+	children = []
+	target = node.state.target_latency
 	for c in node.children:
-		exploit=c.reward/c.visits
-		explore=math.sqrt(2.0*math.log(node.visits)/float(c.visits))	
-		score=exploit+scalar*explore
-		if score==bestscore:
+		exploit = c.reward / c.visits
+		explore = math.sqrt(2.0*math.log(node.visits)/float(c.visits))	
+		score = exploit+scalar*explore
+		if score == bestscore:
 			bestchildren.append(c)
-		if score>bestscore:
-			bestchildren=[c]
-			bestscore=score
-	if len(bestchildren)==0:
+		if score > bestscore:
+			bestchildren = [c]
+			bestscore = score
+	if len(bestchildren) == 0:
 		logger.warn("OOPS: no best child found, probably fatal")
-	return random.choice(bestchildren)
+	print("bestchildren: ", bestchildren, ", type: ", type(bestchildren))
+	top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
+	return top_one
 
 def DEFAULTPOLICY(state):
 	while state.terminal() == False:
 		state = state.next_state()
-	return state.reward()
+	return state.reward(), state.get_latency()
 
-def BACKUP(node,reward):
-	while node!=None:
-		node.visits+=1
-		node.reward+=reward
-		node=node.parent
+def BACKUP(node, reward, latest_latency):
+	while node != None:
+		node.reward += reward
+		node.latency = latest_latency
+		node.visits += 1 
+		node = node.parent
 	return
 
 if __name__=="__main__":

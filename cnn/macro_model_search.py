@@ -187,19 +187,15 @@ class MacroNetwork(nn.Module):
     #print("HERE {}".format(valid_gen_choice))
     num_sims = 3
     levels = 3
-    arch_dict = {}
+    arch_dict = []
     current_node = mcts.Node(mcts.State(value=0, moves=[], turn=10))
     for l in range(levels):
       current_node = mcts.UCTSEARCH(num_sims / (l+1), current_node)
       print("level %d"%l)
-      print("Num Children: %d"%len(current_node.children))
-      for i,c in enumerate(current_node.children):
-        print(i,c)
-      print("Best Child: %s"% current_node.state)
       print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
       selected_layers = current_node.state.moves
       print("selected {}".format(selected_layers))
-      arch_dict.update({
+      arch_dict.append({
         "model": HeterogenousNetworkCIFAR(
           init_channels, 
           10, 
@@ -208,7 +204,7 @@ class MacroNetwork(nn.Module):
           selected_layers
         )
       })
-    print(len(arch_dict), ";;; arch dict ", arch_dict)
+    print(len(arch_dict), ";;; arch dict ")
     return arch_dict
     # for ifamily in range(1, n_family + 1):
     #   valid_layer = int(ifamily * max_layers / n_family)
