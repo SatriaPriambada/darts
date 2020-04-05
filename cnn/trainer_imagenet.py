@@ -48,6 +48,22 @@ NUM_WORKERS = 4
 IMAGENET_CLASSES = 1000
 ngpus_per_node = 1
 
+
+class CrossEntropyLabelSmooth(nn.Module):
+    def __init__(self, num_classes, epsilon):
+        super(CrossEntropyLabelSmooth, self).__init__()
+        self.num_classes = num_classes
+        self.epsilon = epsilon
+        self.logsoftmax = nn.LogSoftmax(dim=1)
+
+    def forward(self, inputs, targets):
+        log_probs = self.logsoftmax(inputs)
+        targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1), 1)
+        targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
+        loss = (-targets * log_probs).mean(0).sum()
+        return loss
+
+
 async def per_res_train(device, 
         device_id, 
         hyperparameter_space, 
@@ -153,15 +169,14 @@ def train_heterogenous_network_imagenet(config):
     criterion = criterion.cuda()
     
     label_smooth = 0.1
-    criterion_smooth = CrossEntropyLabelSmooth(CLASSES, label_smooth)
+    criterion_smooth = CrossEntropyLabelSmooth(IMAGENET_CLASSES, label_smooth)
     criterion_smooth = criterion_smooth.cuda()
     
     port = 3456 + int(config["architecture"]["id"])
-    dist-url = 'tcp://127.0.0.1:' + str(port)
-    dist-backend = 'nccl'
+    dist_url = 'tcp://127.0.0.1:' + str(port)
+    dist_backend = 'nccl'
     rank = 0
     world_size= 1
-    distributed = true
     dist.init_process_group(backend=dist_backend, init_method=dist_url,
                             world_size=world_size, rank=rank)
     mp.spawn(main_worker, nprocs=ngpus_per_node, args=(model,))
