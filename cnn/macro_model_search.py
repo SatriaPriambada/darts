@@ -176,25 +176,40 @@ class MacroNetwork(nn.Module):
                           init_channels, 
                           max_layers, 
                           n_family, 
-                          auxiliary):
+                          auxiliary,
+                          drop_path_prob):
     architectures = []
     model_names = [] 
     valid_gen_choice = micro_genotypes['genotype'].tolist()
     valid_gen_choice.append("none")
-
-    ln_valid_choice = len(valid_gen_choice) - 1
+    config = {
+      "architecture": {
+        "init_channels": init_channels,
+			  "num_classes": 10,
+			  "layers": max_layers,
+			  "auxiliary": auxiliary,
+        "drop_path_prob": drop_path_prob
+      },
+      "lr": 0.025,
+      "momentum": 0.9
+    }
 
     #print("HERE {}".format(valid_gen_choice))
     num_sims = 3
     levels = 3
     arch_dict = []
-    current_node = mcts.Node(mcts.State(value=0, moves=[], turn=10))
+    target_latency = [(i + 1) for i in range(n_family)]
+    current_node = mcts.Node(
+      mcts.State(value=0, moves=[], turn=10, n_family=n_family,
+        target_latency=target_latency, config=config)
+    )
+
     for l in range(levels):
       current_node = mcts.UCTSEARCH(num_sims / (l+1), current_node)
       print("level %d"%l)
       print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
       selected_layers = current_node.state.moves
-      print("selected {}".format(selected_layers))
+      #print("selected {}".format(selected_layers))
       arch_dict.append({
         "model": HeterogenousNetworkCIFAR(
           init_channels, 
