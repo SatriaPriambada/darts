@@ -18,11 +18,12 @@ from model import HeterogenousNetworkCIFAR
 from model_trainable import convert_str_to_CIFAR_Network
 import acc_profiler 
 import latency_profiler
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="7"
 import argparse
 
 filename = "arch_profile"
-OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "arch_above_12.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
 INPUT_SIZE = 224
@@ -58,7 +59,7 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
       INPUT_SIZE, INPUT_SIZE).to(device)
   else:
     sys.exit('Error!, dataset name not defined')
-  
+  print("start profiling")  
   for architecture in sampled_architectures:
     model = architecture["model"].to(device)
     model.drop_path_prob = drop_path_prob
@@ -67,11 +68,10 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
     #profile latencies
     mean_lat, latencies = latency_profiler.test_latency(model, input, device)
     #profile accuracy
-    valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
-
+    #valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
     dict_list.append({
         'name': architecture["name"],
-        'acc': valid_acc,
+        'acc': 0,
         'mean_lat':mean_lat,
         'lat95':latencies[94],
         'lat99':latencies[98],
@@ -93,7 +93,7 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
+    parser.add_argument('-d', '--device', type=str, default='gpu-rtx2080', help='device used for profile')
     parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
     parser.add_argument('-l', '--layers', type=int, default=25, help='number of layers')
     args = parser.parse_args()
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     filepath = "~/data/" + dataset_name
     if "gpu" in args.device:
         print("profile on gpu")
-        device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     else:
         print("profile on cpu")
         device = torch.device('cpu')
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
       cudnn.benchmark = True
       torch.manual_seed(seed)
-      cudnn.enabled=True
+      cudnn.enabled=False
       torch.cuda.manual_seed(seed)
       criterion = nn.CrossEntropyLoss().cuda()
     else:
