@@ -39,7 +39,7 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "arch_below_12.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 128
 
@@ -170,9 +170,9 @@ def train_heterogenous_network_cifar(config):
 def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile, device=torch.device("cpu"), auxiliary=True):
     model.to(device)
     model.train()
-    objs = utils.AvgrageMeter()
-    top1 = utils.AvgrageMeter()
-    top5 = utils.AvgrageMeter()
+    objs = utils.AverageMeter()
+    top1 = utils.AverageMeter()
+    top5 = utils.AverageMeter()
 
     for batch_idx, (data, target) in enumerate(train_loader):
       logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
@@ -209,9 +209,9 @@ def torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device=torch
     model.eval()
     logfile.write("start test\n")
     logfile.flush()
-    objs = utils.AvgrageMeter()
-    top1 = utils.AvgrageMeter()
-    top5 = utils.AvgrageMeter()
+    objs = utils.AverageMeter()
+    top1 = utils.AverageMeter()
+    top5 = utils.AverageMeter()
     with torch.no_grad():
         for batch_idx, (data, target) in enumerate(test_loader):
             data = Variable(data).to(device)
@@ -282,7 +282,7 @@ if __name__ == '__main__':
         for i, arch in enumerate(sampled_architecture)
     ]
 
-    n_family = 2
+    n_family = 8
 
     sched = NAScheduler(
         metric='mean_accuracy',

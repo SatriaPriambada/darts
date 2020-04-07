@@ -10,14 +10,15 @@ import argparse
 import torch.nn as nn
 import genotypes
 import torch.utils
-import torchvision.datasets as dset
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
 import torch.backends.cudnn as cudnn
 
 from torch.autograd import Variable
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-import torchvision.datasets as dset
+
 import ray
 from ray import tune
 from ray.tune import track
@@ -43,10 +44,25 @@ import async_timeout
 
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
 # Change these values if you want the training to run quicker or slower.
-EPOCH_SIZE = 8
-NUM_WORKERS = 4
 IMAGENET_CLASSES = 1000
 ngpus_per_node = 1
+best_acc1 = 0
+
+
+class CrossEntropyLabelSmooth(nn.Module):
+    def __init__(self, num_classes, epsilon):
+        super(CrossEntropyLabelSmooth, self).__init__()
+        self.num_classes = num_classes
+        self.epsilon = epsilon
+        self.logsoftmax = nn.LogSoftmax(dim=1)
+
+    def forward(self, inputs, targets):
+        log_probs = self.logsoftmax(inputs)
+        targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1), 1)
+        targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
+        loss = (-targets * log_probs).mean(0).sum()
+        return loss
+
 
 async def per_res_train(device, 
         device_id, 
@@ -84,17 +100,20 @@ async def async_train(device,
         n_family,
         sched, 
         path):
-
-      
-    arr_of_models = list(chunks(model_architectures, len(model_architectures)))
+    fam_member = int(len(model_architectures)/n_family)
+    if fam_member == 0:
+        fam_member = 1
+    print("possible family candidates per strata", fam_member)  
+    arr_of_models = list(chunks(model_architectures, fam_member))
     print(arr_of_models)
-    devices = [i for i in range(n_family)]
+    print("len arr ", len(arr_of_models))
+    
     tasks = []
-
-    for device_id in devices:
+  
+    for device_id, arr_model in enumerate(arr_of_models):
         hyperparameter_space = {
             "model_name": "train_mnist",
-            "architecture": tune.grid_search(arr_of_models[device_id]),
+            "architecture": tune.grid_search(arr_model),
             "lr": tune.grid_search([args.learning_rate]),
             "momentum":  tune.grid_search([args.momentum])
         }
@@ -108,26 +127,58 @@ async def async_train(device,
 
     await asyncio.gather(*tasks)
 
-def get_dist_data_loaders(batch_size, num_workers):
-    train_transform, valid_transform = utils._data_transforms_cifar10(args)
-    
-    train_data = dset.CIFAR10(root="~/data", train=True, download=True, transform=train_transform)
-    test_data = dset.CIFAR10(root="~/data", train=False, download=True, transform=valid_transform)
-    
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_data,
-                                                                    num_replicas=1)
-    train_loader = torch.utils.data.DataLoader(
-        train_data, batch_size=batch_size, shuffle=True, 
-        pin_memory=True, num_workers=num_workers, sampler=train_sampler)
+def get_dist_data_loaders(batch_size, workers):
+    print('==> Preparing data..')
+    transforms_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), 
+            (0.2023, 0.1994, 0.2010))])
 
-    test_sampler = torch.utils.data.distributed.DistributedSampler(test_data,
-                                                                    num_replicas=1)
+    # Data loading code
+    traindir = os.path.join(args.data, 'train')
+    valdir = os.path.join(args.data, 'val')
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    train_dataset = datasets.ImageFolder(
+        traindir,
+        transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(
+                brightness=0.4,
+                contrast=0.4,
+                saturation=0.4,
+                hue=0.2),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=(train_sampler is None),
+        num_workers=workers, pin_memory=True, sampler=train_sampler)
+
     test_loader = torch.utils.data.DataLoader(
-        test_data, batch_size=batch_size, shuffle=False, 
-        pin_memory=True, num_workers=num_workers, sampler=test_sampler)
+        datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])),
+        batch_size=batch_size, shuffle=False,
+        num_workers=workers, pin_memory=True)
+    
     return train_loader, test_loader
 
 def train_heterogenous_network_imagenet(config):
+#    ngpus_per_node = torch.cuda.device_count()
+
+    world_size = ngpus_per_node * args.world_size
+        
     model_name = config["architecture"]["name"]
 
     selected_layers = model_name.split(";")
@@ -141,7 +192,7 @@ def train_heterogenous_network_imagenet(config):
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    model = model.to(device)
     optimizer = optim.SGD(
         model.parameters(), lr=config["lr"], momentum=config["momentum"])
     
@@ -153,36 +204,28 @@ def train_heterogenous_network_imagenet(config):
     criterion = criterion.cuda()
     
     label_smooth = 0.1
-    criterion_smooth = CrossEntropyLabelSmooth(CLASSES, label_smooth)
+    criterion_smooth = CrossEntropyLabelSmooth(IMAGENET_CLASSES, label_smooth)
     criterion_smooth = criterion_smooth.cuda()
-    
-    port = 3456 + int(config["architecture"]["id"])
-    dist-url = 'tcp://127.0.0.1:' + str(port)
-    dist-backend = 'nccl'
-    rank = 0
-    world_size= 1
-    distributed = true
-    dist.init_process_group(backend=dist_backend, init_method=dist_url,
-                            world_size=world_size, rank=rank)
-    mp.spawn(main_worker, nprocs=ngpus_per_node, args=(model,))
-        
-def main_worker(model):
-    model = torch.nn.parallel.DistributedDataParallel(model)
+    valid_port = args.dist_port + int(config["architecture"]["id"])
+    full_url = args.dist_url + ':' + str(valid_port)
+    dist.init_process_group(backend=args.dist_backend, init_method=full_url,
+        rank=args.rank, world_size=world_size)
+    model = torch.nn.parallel.DistributedDataParallel(model, find_unused_parameters=True)
     # Train model to get accuracy.
 
     logfile = open("log.txt","w")
     logfile.write("[Tio] log for architecture id {}".format(config["architecture"]["id"]))
     #logfile.write("[Tio] training model {}".format(model_name))
-    train_loader, test_loader = get_dist_data_loaders(BATCH_SIZE, NUM_WORKERS)
+    train_loader, test_loader = get_dist_data_loaders(args.batch_size, args.workers)
 
     best_acc = 0
-    for epoch in range(args.epoch):
+    for epoch in range(args.final_epochs):
       scheduler.step()
-      model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
+      model.drop_path_prob = args.drop_path_prob * epoch / args.final_epochs
       # Train model to get accuracy.
       logfile.write("start training epoch {} \n".format(epoch))
       logfile.flush()
-      train_acc, _ = torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile, device, config["architecture"]["auxiliary"])
+      train_acc, _ = torch_1_v_4_train(epoch, model, optimizer, criterion_smooth, train_loader, logfile, device, config["architecture"]["auxiliary"])
       # Obtain validation accuracy.
       logfile.write("start test epoch {} \n".format(epoch))
       logfile.flush()
@@ -200,13 +243,11 @@ def main_worker(model):
 def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile, device=torch.device("cpu"), auxiliary=True):
     model.to(device)
     model.train()
-    objs = utils.AvgrageMeter()
-    top1 = utils.AvgrageMeter()
-    top5 = utils.AvgrageMeter()
+    objs = utils.AverageMeter()
+    top1 = utils.AverageMeter()
+    top5 = utils.AverageMeter()
 
     for batch_idx, (data, target) in enumerate(train_loader):
-      logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
-      logfile.flush()
       
       data = Variable(data).to(device)
       target = Variable(target).to(device)
@@ -229,7 +270,7 @@ def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile,
       objs.update(loss.item(), n)
       top1.update(prec1.item(), n)
       top5.update(prec5.item(), n)
-      logfile.write("train %03d %e %f %f".format(batch_idx, objs.avg, top1.avg, top5.avg))
+      logfile.write("train {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg))
       logfile.flush()
 
     return top1.avg, objs.avg
@@ -239,9 +280,9 @@ def torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device=torch
     model.eval()
     logfile.write("start test\n")
     logfile.flush()
-    objs = utils.AvgrageMeter()
-    top1 = utils.AvgrageMeter()
-    top5 = utils.AvgrageMeter()
+    objs = utils.AverageMeter()
+    top1 = utils.AverageMeter()
+    top5 = utils.AverageMeter()
     with torch.no_grad():
         for batch_idx, (data, target) in enumerate(test_loader):
             data = Variable(data).to(device)
@@ -256,20 +297,47 @@ def torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device=torch
             top1.update(prec1.item(), n)
             top5.update(prec5.item(), n)
 
-            logfile.write('valid %03d %e %f %f'.format(batch_idx, objs.avg, top1.avg, top5.avg))
+            logfile.write('valid {} {} {} {}'.format(batch_idx, objs.avg, top1.avg, top5.avg))
             logfile.flush()
     return top1.avg, objs.avg
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("train.py")
-    parser.add_argument('--data', type=str, default='../data', help='location of the data corpus')
-    parser.add_argument('--batch_size', type=int, default=96, help='batch size')
+    parser = argparse.ArgumentParser(description='imagenet distributed training models')
+#    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
+#                        choices=model_names,
+#                        help='model architecture: ' +
+#                            ' | '.join(model_names) +
+#                            ' (default: resnet18)')
+
     parser.add_argument('--learning_rate', type=float, default=0.025, help='init learning rate')
     parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
     parser.add_argument('--weight_decay', type=float, default=3e-4, help='weight decay')
+
+    parser.add_argument('--final_epochs', default=1, type=int,
+                        help='number of total epochs to run')
+
+    parser.add_argument('--batch_size', type=int, default=128, help='')
+    parser.add_argument('--workers', type=int, default=4, help='')
+    parser.add_argument('--gpu_devices', type=int, nargs='+', default=[0, 1, 2, 3, 4, 5, 6, 7], help="")
+
+    parser.add_argument('--data', default='/srv/data/datasets/ImageNet', type=str,
+                        help='path to ImageNet data')
+    parser.add_argument('-print', '--print-freq', default=1, type=int,
+                        metavar='N', help='print frequency (default: 10)')
+
+    parser.add_argument('--dist-url', default='tcp://127.0.0.1', type=str, help='')
+    parser.add_argument('--dist-port', default=3456, type=int, help='')
+    parser.add_argument('--dist-backend', default='nccl', type=str, help='')
+    parser.add_argument('--rank', default=0, type=int, help='')
+    parser.add_argument('--world_size', default=1, type=int, help='')
+    parser.add_argument('--distributed', action='store_true', help='')
+    args = parser.parse_args()
+
+    gpu_devices = ','.join([str(id) for id in args.gpu_devices])
+    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_devices
+
     parser.add_argument('--report_freq', type=float, default=50, help='report frequency')
     parser.add_argument('--gpu', type=int, default=0, help='gpu device id')
-    parser.add_argument('--epochs', type=int, default=120, help='num of training epochs')
     parser.add_argument('--init_channels', type=int, default=36, help='num of init channels')
     parser.add_argument('--layers', type=int, default=25, help='total number of layers')
     parser.add_argument('--model_path', type=str, default='saved_models', help='path to save the model')
@@ -309,7 +377,7 @@ if __name__ == '__main__':
         for i, arch in enumerate(sampled_architecture)
     ]
 
-    n_family = 2
+    n_family = 1
 
     sched = NAScheduler(
         metric='mean_accuracy',
