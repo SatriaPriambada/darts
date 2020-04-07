@@ -10,14 +10,15 @@ import argparse
 import torch.nn as nn
 import genotypes
 import torch.utils
-import torchvision.datasets as dset
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
 import torch.backends.cudnn as cudnn
 
 from torch.autograd import Variable
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-import torchvision.datasets as dset
+
 import ray
 from ray import tune
 from ray.tune import track
@@ -44,7 +45,7 @@ import async_timeout
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
 # Change these values if you want the training to run quicker or slower.
 IMAGENET_CLASSES = 1000
-ngpus_per_node = 8
+ngpus_per_node = 1
 best_acc1 = 0
 
 
@@ -99,17 +100,20 @@ async def async_train(device,
         n_family,
         sched, 
         path):
-
-      
-    arr_of_models = list(chunks(model_architectures, len(model_architectures)))
+    fam_member = int(len(model_architectures)/n_family)
+    if fam_member == 0:
+        fam_member = 1
+    print("possible family candidates per strata", fam_member)  
+    arr_of_models = list(chunks(model_architectures, fam_member))
     print(arr_of_models)
-    devices = [i for i in range(n_family)]
+    print("len arr ", len(arr_of_models))
+    
     tasks = []
-
-    for device_id in devices:
+  
+    for device_id, arr_model in enumerate(arr_of_models):
         hyperparameter_space = {
             "model_name": "train_mnist",
-            "architecture": tune.grid_search(arr_of_models[device_id]),
+            "architecture": tune.grid_search(arr_model),
             "lr": tune.grid_search([args.learning_rate]),
             "momentum":  tune.grid_search([args.momentum])
         }
@@ -123,7 +127,7 @@ async def async_train(device,
 
     await asyncio.gather(*tasks)
 
-def get_dist_data_loaders(batch_size, num_workers):
+def get_dist_data_loaders(batch_size, workers):
     print('==> Preparing data..')
     transforms_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
@@ -143,6 +147,11 @@ def get_dist_data_loaders(batch_size, num_workers):
         transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(
+                brightness=0.4,
+                contrast=0.4,
+                saturation=0.4,
+                hue=0.2),
             transforms.ToTensor(),
             normalize,
         ]))
@@ -166,13 +175,10 @@ def get_dist_data_loaders(batch_size, num_workers):
     return train_loader, test_loader
 
 def train_heterogenous_network_imagenet(config):
-    ngpus_per_node = torch.cuda.device_count()
+#    ngpus_per_node = torch.cuda.device_count()
 
-    args.world_size = ngpus_per_node * args.world_size
-
-    mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, config, args))
+    world_size = ngpus_per_node * args.world_size
         
-def main_worker(gpu, ngpus_per_node, config, args):
     model_name = config["architecture"]["name"]
 
     selected_layers = model_name.split(";")
@@ -186,7 +192,7 @@ def main_worker(gpu, ngpus_per_node, config, args):
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    model = model.to(device)
     optimizer = optim.SGD(
         model.parameters(), lr=config["lr"], momentum=config["momentum"])
     
@@ -200,13 +206,17 @@ def main_worker(gpu, ngpus_per_node, config, args):
     label_smooth = 0.1
     criterion_smooth = CrossEntropyLabelSmooth(IMAGENET_CLASSES, label_smooth)
     criterion_smooth = criterion_smooth.cuda()
-    model = torch.nn.parallel.DistributedDataParallel(model)
+    valid_port = args.dist_port + int(config["architecture"]["id"])
+    full_url = args.dist_url + ':' + str(valid_port)
+    dist.init_process_group(backend=args.dist_backend, init_method=full_url,
+        rank=args.rank, world_size=world_size)
+    model = torch.nn.parallel.DistributedDataParallel(model, find_unused_parameters=True)
     # Train model to get accuracy.
 
     logfile = open("log.txt","w")
     logfile.write("[Tio] log for architecture id {}".format(config["architecture"]["id"]))
     #logfile.write("[Tio] training model {}".format(model_name))
-    train_loader, test_loader = get_dist_data_loaders(args., NUM_WORKERS)
+    train_loader, test_loader = get_dist_data_loaders(args.batch_size, args.workers)
 
     best_acc = 0
     for epoch in range(args.final_epochs):
@@ -215,7 +225,7 @@ def main_worker(gpu, ngpus_per_node, config, args):
       # Train model to get accuracy.
       logfile.write("start training epoch {} \n".format(epoch))
       logfile.flush()
-      train_acc, _ = torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile, device, config["architecture"]["auxiliary"])
+      train_acc, _ = torch_1_v_4_train(epoch, model, optimizer, criterion_smooth, train_loader, logfile, device, config["architecture"]["auxiliary"])
       # Obtain validation accuracy.
       logfile.write("start test epoch {} \n".format(epoch))
       logfile.flush()
@@ -238,8 +248,6 @@ def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile,
     top5 = utils.AverageMeter()
 
     for batch_idx, (data, target) in enumerate(train_loader):
-      logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
-      logfile.flush()
       
       data = Variable(data).to(device)
       target = Variable(target).to(device)
@@ -262,7 +270,7 @@ def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile,
       objs.update(loss.item(), n)
       top1.update(prec1.item(), n)
       top5.update(prec5.item(), n)
-      logfile.write("train %03d %e %f %f".format(batch_idx, objs.avg, top1.avg, top5.avg))
+      logfile.write("train {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg))
       logfile.flush()
 
     return top1.avg, objs.avg
@@ -289,36 +297,36 @@ def torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device=torch
             top1.update(prec1.item(), n)
             top5.update(prec5.item(), n)
 
-            logfile.write('valid %03d %e %f %f'.format(batch_idx, objs.avg, top1.avg, top5.avg))
+            logfile.write('valid {} {} {} {}'.format(batch_idx, objs.avg, top1.avg, top5.avg))
             logfile.flush()
     return top1.avg, objs.avg
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='imagenet distributed training models')
-    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-                        choices=model_names,
-                        help='model architecture: ' +
-                            ' | '.join(model_names) +
-                            ' (default: resnet18)')
+#    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
+#                        choices=model_names,
+#                        help='model architecture: ' +
+#                            ' | '.join(model_names) +
+#                            ' (default: resnet18)')
 
     parser.add_argument('--learning_rate', type=float, default=0.025, help='init learning rate')
     parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
     parser.add_argument('--weight_decay', type=float, default=3e-4, help='weight decay')
 
-    parser.add_argument('--final_epochs', default=90, type=int,
+    parser.add_argument('--final_epochs', default=1, type=int,
                         help='number of total epochs to run')
 
-    parser.add_argument('--batch_size', type=int, default=512, help='')
+    parser.add_argument('--batch_size', type=int, default=128, help='')
     parser.add_argument('--workers', type=int, default=4, help='')
-    parser.add_argument('--gpu_devices', type=int, nargs='+', default=None, help="")
+    parser.add_argument('--gpu_devices', type=int, nargs='+', default=[0, 1, 2, 3, 4, 5, 6, 7], help="")
 
     parser.add_argument('--data', default='/srv/data/datasets/ImageNet', type=str,
                         help='path to ImageNet data')
-    parser.add_argument('-p', '--print-freq', default=10, type=int,
+    parser.add_argument('-print', '--print-freq', default=1, type=int,
                         metavar='N', help='print frequency (default: 10)')
 
-    parser.add_argument('--gpu', default=None, type=int, help='GPU id to use.')
-    parser.add_argument('--dist-url', default='tcp://127.0.0.1:3456', type=str, help='')
+    parser.add_argument('--dist-url', default='tcp://127.0.0.1', type=str, help='')
+    parser.add_argument('--dist-port', default=3456, type=int, help='')
     parser.add_argument('--dist-backend', default='nccl', type=str, help='')
     parser.add_argument('--rank', default=0, type=int, help='')
     parser.add_argument('--world_size', default=1, type=int, help='')
@@ -369,7 +377,7 @@ if __name__ == '__main__':
         for i, arch in enumerate(sampled_architecture)
     ]
 
-    n_family = 2
+    n_family = 1
 
     sched = NAScheduler(
         metric='mean_accuracy',
