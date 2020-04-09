@@ -59,7 +59,7 @@ def draw_errorbar_graph(file_name, device, path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--filename', nargs='+', type=str, default='arch_profile_cpu.csv', help='start system with test config')
-    parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
+    parser.add_argument('-d', '--device', type=str, default='gpu-rtx2080', help='device used for profile')
     parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
     parser.add_argument('--latency_only', action='store_true', default=False)
     args = parser.parse_args()
