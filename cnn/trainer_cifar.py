@@ -39,9 +39,11 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "arch_above_12.csv"
 # Change these values if you want the training to run quicker or slower.
-EPOCH_SIZE = 128
+EPOCH_SIZE = 24
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,5,6,7"
 
 async def per_res_train(device, 
         device_id, 
@@ -284,7 +286,7 @@ if __name__ == '__main__':
         for i, arch in enumerate(sampled_architecture)
     ]
 
-    n_family = 2
+    n_family = 8
 
     sched = NAScheduler(
         metric='mean_accuracy',

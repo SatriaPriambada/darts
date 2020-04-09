@@ -21,12 +21,13 @@ import latency_profiler
 
 import argparse
 
-filename = "arch_profile"
+filename = "arch_profile_imagenet_batch_32"
 OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
-INPUT_BATCH = 1
+#OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+INPUT_BATCH = 16
 INPUT_CHANNEL = 3
 INPUT_SIZE = 224
-CIFAR_CLASSES = 10
+CIFAR_CLASSES = 1000
 
 def connvert_df_to_list_arch(df,init_channels, layers, auxiliary, num_classes):
   architectures = []
@@ -67,11 +68,11 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
     #profile latencies
     mean_lat, latencies = latency_profiler.test_latency(model, input, device)
     #profile accuracy
-    valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
+    #valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
 
     dict_list.append({
         'name': architecture["name"],
-        'acc': valid_acc,
+        'acc': 0,
         'mean_lat':mean_lat,
         'lat95':latencies[94],
         'lat99':latencies[98],
@@ -93,7 +94,7 @@ def profile_arch_lat_and_acc(dataset_name, test_loader, sampled_architectures, c
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--device', type=str, default='cpu-i7-4578U', help='device used for profile')
+    parser.add_argument('-d', '--device', type=str, default='gpu-rtx2080', help='device used for profile')
     parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
     parser.add_argument('-l', '--layers', type=int, default=25, help='number of layers')
     args = parser.parse_args()
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     dataset_name = 'cifar10'
     num_classes = 10
     filepath = "~/data/" + dataset_name
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
 
     print("Load Data from: {}".format(filepath))
     CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
