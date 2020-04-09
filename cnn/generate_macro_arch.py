@@ -31,7 +31,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
 load_filename = "generated_micro"
-filename = "generated_macro_mcts"
+filename = "generated_cifar_macro_mcts"
 NFAMILY = 8
 CIFAR_CLASSES = 10
 NUM_SAMPLE = 125
@@ -63,16 +63,16 @@ def generate_macro(dataset_name,
   macro_network = MacroNetwork(init_channels, CIFAR_CLASSES, 
     layers, criterion, device=device)
   micro_genotypes = pd.read_csv(load_filename + '_{}_center.csv'.format(str(device)))
-  print(micro_genotypes) 
+  #print(micro_genotypes) 
   sampled_architecture = macro_network.sample_mcts_architecture(dataset_name, NUM_SAMPLE, 
     micro_genotypes, init_channels, layers, n_family, auxiliary, drop_path_prob)
-  #df_arch = pd.DataFrame(sampled_architecture)
-  #df_arch = df_arch.drop(columns=['model'])
-  #print(df_arch)
-  #df_arch.to_csv(Path(filename + '_mcts_architecture_{}_layers.csv'.format(str(device), str(args.layers))), 
-  # index = None)
+  df_arch = pd.DataFrame(sampled_architecture)
+  df_arch = df_arch.drop(columns=['model'])
+  print(df_arch)
+  df_arch.to_csv(Path(filename + '_mcts_architecture_{}_layers.csv'.format(str(device), str(args.layers))), 
+  index = None)
 
-  #return df_arch
+  return df_arch
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()

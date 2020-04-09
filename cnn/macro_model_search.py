@@ -190,63 +190,46 @@ class MacroNetwork(nn.Module):
 			  "auxiliary": auxiliary,
         "drop_path_prob": drop_path_prob
       },
+      "device": torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
       "lr": 0.025,
       "momentum": 0.9
     }
 
     #print("HERE {}".format(valid_gen_choice))
-    num_sims = 3
-    levels = 3
-    arch_dict = []
+    num_sims = 25
+    architectures = []
     target_latency = [(i + 1) for i in range(n_family)]
     current_node = mcts.Node(
       mcts.State(value=0, moves=[], turn=10, n_family=n_family,
         target_latency=target_latency, config=config)
     )
 
-    for l in range(levels):
-      current_node = mcts.UCTSEARCH(num_sims / (l+1), current_node)
-      print("level %d"%l)
+    for fam_member in range(n_family):
+      current_node = mcts.UCTSEARCH(num_sims / (fam_member + 1), current_node)
+      print("fam_member ", fam_member)
       print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
       selected_layers = current_node.state.moves
-      #print("selected {}".format(selected_layers))
-      arch_dict.append({
-        "model": HeterogenousNetworkCIFAR(
-          init_channels, 
-          10, 
-          len(selected_layers), 
-          auxiliary, 
-          selected_layers
-        )
-      })
-    print(len(arch_dict), ";;; arch dict ")
-    return arch_dict
-    # for ifamily in range(1, n_family + 1):
-    #   valid_layer = int(ifamily * max_layers / n_family)
-    #   print("val layer: {}".format(valid_layer))
-    #   for _ in range(nsample):
-    #     selected_layers = []
-    #     selected_idx = []
-    #     for i in range(valid_layer):
-    #       rand_idx = random.randint(0, ln_valid_choice) 
-    #       selected_idx.append(rand_idx)
-    #       selected_layers.append(valid_gen_choice[rand_idx])
-    #     none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
-    #     name = ';'.join([str(elem) for elem in selected_layers]) 
-    #     skip_conn = [i.start() for i in re.finditer("skip", name)]
-    #     arch_dict = {
-    #       "selected_medioid_idx": selected_idx,
-    #       "cell_layers": valid_layer - len(none_layers),
-    #       "none_layers": len(none_layers),
-    #       "skip_conn": len(skip_conn),
-    #       "name": name
-    #     }
+      print("selected_med_idx {}".format(current_node.state.selected_med_idx))
+      name = ';'.join([str(elem) for elem in selected_layers]) 
+      none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
+      skip_conn = [i.start() for i in re.finditer("skip", name)]
+      arch_dict = {
+        "selected_medioid_idx": current_node.state.selected_med_idx,
+        "cell_layers": len(selected_layers) - len(none_layers),
+        "none_layers": len(none_layers),
+        "skip_conn": len(skip_conn),
+        "name": name
+      }
 
-    #     architectures.append(self.build_architecture(
-    #       dataset_name, 
-    #       arch_dict, 
-    #       init_channels,
-    #       valid_layer, 
-    #       auxiliary, 
-    #       selected_layers))
+      architectures.append(self.build_architecture(
+          dataset_name, 
+          arch_dict, 
+          init_channels,
+          len(selected_layers) - len(none_layers), 
+          auxiliary, 
+          selected_layers))
+    
+    print(len(architectures), ";;; arch ")
+    return architectures
+
 

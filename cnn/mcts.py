@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import latency_profiler
 
 """
 Original version can be seen on https://github.com/ajax98/catan/blob/master/mcts.py
@@ -33,6 +34,10 @@ In particular there are two models of best child that one can use
 #MCTS scalar.  Larger scalar will increase exploitation, 
 # smaller will increase exploration. 
 SCALAR=1/math.sqrt(2.0)
+INPUT_BATCH = 1
+INPUT_CHANNEL = 3
+INPUT_SIZE = 32
+CIFAR_CLASSES = 10
 
 def gaussian(X, mu, cov):
     n = X.shape[1]
@@ -40,7 +45,7 @@ def gaussian(X, mu, cov):
     return np.diagonal(1 / ((2 * np.pi) ** (n / 2) * np.linalg.det(cov) ** 0.5) * np.exp(-0.5 * np.dot(np.dot(diff.T, np.linalg.inv(cov)), diff))).reshape(-1, 1)
 
 class State():
-	NUM_TURNS = 10	
+	NUM_TURNS = 1	
 	GOAL = 10
 	MAX_VALUE= (5.0*(NUM_TURNS-1)*NUM_TURNS) / 2
 	MOVES = pd.read_csv('generated_micro_cpu_center.csv')["genotype"].to_list()
@@ -50,18 +55,22 @@ class State():
 		#print("MOVES {}".format(self.MOVES))
 		self.value = value
 		self.turn = turn
-		self.moves = []
-		self.n_family = n_family
-		self.acc = 0
-		self.lat = 1000
-		self.target_latency = target_latency #ms
+		self.moves = [] #selected moves represent selected layers
+		self.selected_med_idx = [] #selected medioid layers
+		self.n_family = n_family #
+		self.acc = 0 #current state acc in %
+		self.lat = 1000 #current state lat 99th in ms
+		self.target_latency = target_latency #array of target lat in ms
 		self.config = config
 		# print("__init called __ {}".format(self.moves))
 
 	def next_state(self):
 		nextmove = []
+		ln_valid_choice = len(self.MOVES) - 1 
 		for i in range(self.turn):
-			nextmove.append(random.choice(self.MOVES))
+			rand_idx = random.randint(0, ln_valid_choice) 
+			self.selected_med_idx.append(rand_idx)
+			nextmove.append(self.MOVES[rand_idx])
 		
 		self.moves += nextmove
 		next = State(self.value , self.moves, self.turn - 1, self.n_family, 
@@ -74,20 +83,9 @@ class State():
 		return False
 
 	def get_acc_latency(self):
-		name = ';'.join([str(elem) for elem in self.moves]) 
-		print(name)
-		train_result = {
-			"acc": 100,
-			"lat": 10
-		}
-		batch_size = 1
-		workers = 4
-		args = Namespace(
-			cutout=False,
-			cutout_length=16
-		)
-		print("cutout ", args.cutout)
-		train_loader, test_loader = trainer_cifar.get_data_loaders(batch_size, workers, args)
+		#For now Uses CIFAR as proxy to get acc and lat
+		#Might add ImageNet later
+
 		model = HeterogenousNetworkCIFAR(
 			self.config["architecture"]["init_channels"], 
 			self.config["architecture"]["num_classes"],
@@ -95,8 +93,21 @@ class State():
 			self.config["architecture"]["auxiliary"],
 			self.moves
 		)
+
 		model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
 
+
+		dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, 
+			INPUT_SIZE, INPUT_SIZE).to(self.config["device"])
+		mean_lat, latencies = latency_profiler.test_latency(model, dummy_input, self.config["device"])
+		
+		batch_size = 16
+		workers = 4
+		args = Namespace(
+			cutout=False,
+			cutout_length=16
+		)
+		train_loader, test_loader = trainer_cifar.get_data_loaders(batch_size, workers, args)
 		optimizer = optim.SGD(
         	model.parameters(), lr=self.config["lr"], momentum=self.config["momentum"])
 
@@ -120,7 +131,10 @@ class State():
 		# 	acc, _ = trainer_cifar.torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)  
 		# 	# since this MCTS form only do training to get an estimation of accuracy we
 		# 	# there's no need to save checkpoint or best model
-		# 	train_result.update({"acc": acc})
+		train_result = {
+			"acc": 0,
+			"lat": latencies[98]
+		}
 		print("train_result ", train_result)
 		return train_result
 
@@ -133,16 +147,14 @@ class State():
 		lat_part = 1
 		for strata in l_stratas:
 			lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
-		acc_part = abs((1 - (self.acc/100))) ** w
+		acc_part = 1 # abs((1 - (self.acc/100))) ** w
 		r = 1 - (acc_part * lat_part)
-		print("r: ", r, ", type: ", type(r))
 		return r
 
 class Node():
 	def __init__(self, state, parent=None):
 		self.visits = 1
 		self.reward = 0.0	
-		self.latency = 0
 		self.state = state
 		self.children = []
 		self.parent = parent
@@ -170,7 +182,7 @@ def UCTSEARCH(budget,root):
 		front = TREEPOLICY(root)
 		reward, train_result = DEFAULTPOLICY(front.state)
 		print("train_result[lat] ", train_result["lat"])
-		BACKUP(front, reward, train_result["lat"])
+		BACKUP(front, reward, train_result["lat"], train_result["acc"])
 	return BESTCHILD(root, 0)
 
 def TREEPOLICY(node):
@@ -231,10 +243,11 @@ def DEFAULTPOLICY(state):
 		state = state.next_state()
 	return state.reward(), state.get_acc_latency()
 
-def BACKUP(node, reward, latest_latency):
+def BACKUP(node, reward, latest_latency, latest_acc):
 	while node != None:
 		node.reward += reward
-		node.latency = latest_latency
+		node.state.acc = latest_acc
+		node.state.lat = latest_latency
 		node.visits += 1 
 		node = node.parent
 	return

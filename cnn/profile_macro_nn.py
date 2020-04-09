@@ -22,11 +22,12 @@ import latency_profiler
 import argparse
 
 filename = "arch_profile"
-OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "generated_cifar_macro_mcts_mcts_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
-INPUT_SIZE = 224
+INPUT_SIZE = 32
 CIFAR_CLASSES = 10
+IMAGENET_CLASSES = 1000
 
 def connvert_df_to_list_arch(df,init_channels, layers, auxiliary, num_classes):
   architectures = []
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     drop_path_prob = 0.2
     data_path = '~/data/'
     dataset_name = 'cifar10'
-    num_classes = 10
+    num_classes = CIFAR_CLASSES
     filepath = "~/data/" + dataset_name
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
