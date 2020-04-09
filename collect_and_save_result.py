@@ -34,7 +34,7 @@ def draw_acc_subplot(df, subplot, color):
     
 def update_df_acc(file_name, device, path):
     df = pd.read_csv(file_name)
-    folder_path = '~/ray_results/train_cifar_simontam/below_12/train_heterogenous_network_cifar/'
+    folder_path = '~/ray_results/trial_heterogenous_network_imagenet/'
     folder_path = os.path.expanduser(folder_path) 
     #print("folder_path: {}".format(folder_path))
     acc = 0
