@@ -22,8 +22,8 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"]="7"
 import argparse
 
-filename = "arch_profile"
-OPORTUNITY_GAP_ARCHITECTURE = "arch_above_12.csv"
+filename = "arch_profile_imagenet_above_18"
+OPORTUNITY_GAP_ARCHITECTURE = "arch_above_18.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
 INPUT_SIZE = 224
