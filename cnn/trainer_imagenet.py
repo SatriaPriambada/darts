@@ -42,7 +42,7 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "arch_above_18.csv"
 # Change these values if you want the training to run quicker or slower.
 IMAGENET_CLASSES = 1000
 ngpus_per_node = 1
@@ -313,7 +313,7 @@ if __name__ == '__main__':
     parser.add_argument('--momentum', type=float, default=0.9, help='momentum')
     parser.add_argument('--weight_decay', type=float, default=3e-4, help='weight decay')
 
-    parser.add_argument('--final_epochs', default=1, type=int,
+    parser.add_argument('--final_epochs', default=90, type=int,
                         help='number of total epochs to run')
 
     parser.add_argument('--batch_size', type=int, default=128, help='')
