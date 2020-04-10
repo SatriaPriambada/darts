@@ -22,12 +22,13 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"]="7"
 import argparse
 
-filename = "arch_profile_imagenet_above_18"
-OPORTUNITY_GAP_ARCHITECTURE = "arch_above_18.csv"
+filename = "arch_profile"
+OPORTUNITY_GAP_ARCHITECTURE = "generated_cifar_macro_mcts_mcts_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
-INPUT_SIZE = 224
+INPUT_SIZE = 32
 CIFAR_CLASSES = 10
+IMAGENET_CLASSES = 1000
 
 def connvert_df_to_list_arch(df,init_channels, layers, auxiliary, num_classes):
   architectures = []
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     drop_path_prob = 0.2
     data_path = '~/data/'
     dataset_name = 'cifar10'
-    num_classes = 10
+    num_classes = CIFAR_CLASSES
     filepath = "~/data/" + dataset_name
     if "gpu" in args.device:
         print("profile on gpu")

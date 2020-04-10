@@ -361,25 +361,36 @@ class HeterogenousNetworkImageNet(nn.Module):
 
     self.cells = nn.ModuleList()
     reduction_prev = True
+    logfile = open("log_model_build.txt","w")
+    logfile.write("[Tio] log for architecture total layers {}".format(self._layers))
+
     for i in range(self._layers):
-      if i in none_layers_idx:
-        continue
+      if i in [layers // 3, 2 * layers // 3]:
+        C_curr *= 2
+        reduction = True
       else:
-        if i in [layers // 3, 2 * layers // 3]:
-          C_curr *= 2
-          reduction = True
-        else:
-          reduction = False
+        reduction = False
+        
+      if i in none_layers_idx:
+        pass
+        logfile.write("pass non layer: {}".format(i))
+      else:
         cell = Cell(eval(genotypes[i]), C_prev_prev, C_prev, C_curr, reduction, reduction_prev)
         reduction_prev = reduction
         self.cells += [cell]
-        C_prev_prev, C_prev = C_prev, cell.multiplier * C_curr
-        if i == 2 * layers // 3:
-          C_to_auxiliary = C_prev
+
+      C_prev_prev, C_prev = C_prev, 4 * C_curr
+      if i == 2 * layers // 3:
+        C_to_auxiliary = C_prev
 
     if auxiliary:
       self.auxiliary_head = AuxiliaryHeadImageNet(C_prev, num_classes)
     self.global_pooling = nn.AvgPool2d(7)
+    logfile.write("last cprev: {}".format(C_prev))
+    if self._layers < 10:
+        C_prev *= 16
+    elif self._layers < 20:
+        C_prev *= 4
     self.classifier = nn.Linear(C_prev, num_classes)
 
   def forward(self, input):

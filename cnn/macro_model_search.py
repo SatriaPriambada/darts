@@ -13,6 +13,7 @@ from model import HeterogenousNetworkCIFAR
 import random
 import itertools
 import re 
+import mcts
 
 class MacroNetwork(nn.Module):
 
@@ -166,4 +167,69 @@ class MacroNetwork(nn.Module):
           selected_layers))
 
     return architectures
+
+      
+  def sample_mcts_architecture(self, 
+                          dataset_name, 
+                          nsample, 
+                          micro_genotypes, 
+                          init_channels, 
+                          max_layers, 
+                          n_family, 
+                          auxiliary,
+                          drop_path_prob):
+    architectures = []
+    model_names = [] 
+    valid_gen_choice = micro_genotypes['genotype'].tolist()
+    valid_gen_choice.append("none")
+    config = {
+      "architecture": {
+        "init_channels": init_channels,
+			  "num_classes": 10,
+			  "layers": max_layers,
+			  "auxiliary": auxiliary,
+        "drop_path_prob": drop_path_prob
+      },
+      "device": torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
+      "lr": 0.025,
+      "momentum": 0.9
+    }
+
+    #print("HERE {}".format(valid_gen_choice))
+    num_sims = 25
+    architectures = []
+    target_latency = [(i + 1) for i in range(n_family)]
+    current_node = mcts.Node(
+      mcts.State(value=0, moves=[], turn=10, n_family=n_family,
+        target_latency=target_latency, config=config)
+    )
+
+    for fam_member in range(n_family):
+      current_node = mcts.UCTSEARCH(num_sims / (fam_member + 1), current_node)
+      print("fam_member ", fam_member)
+      print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
+      selected_layers = current_node.state.moves
+      print("selected_med_idx {}".format(current_node.state.selected_med_idx))
+      name = ';'.join([str(elem) for elem in selected_layers]) 
+      none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
+      skip_conn = [i.start() for i in re.finditer("skip", name)]
+      arch_dict = {
+        "selected_medioid_idx": current_node.state.selected_med_idx,
+        "cell_layers": len(selected_layers) - len(none_layers),
+        "none_layers": len(none_layers),
+        "skip_conn": len(skip_conn),
+        "name": name
+      }
+
+      architectures.append(self.build_architecture(
+          dataset_name, 
+          arch_dict, 
+          init_channels,
+          len(selected_layers) - len(none_layers), 
+          auxiliary, 
+          selected_layers))
+    
+    print(len(architectures), ";;; arch ")
+    return architectures
+
 

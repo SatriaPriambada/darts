@@ -42,7 +42,8 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "arch_above_18.csv"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
+OPORTUNITY_GAP_ARCHITECTURE = "generated_cifar_macro_mcts_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
 IMAGENET_CLASSES = 1000
 ngpus_per_node = 1
@@ -103,10 +104,10 @@ async def async_train(device,
     fam_member = int(len(model_architectures)/n_family)
     if fam_member == 0:
         fam_member = 1
-    print("possible family candidates per strata", fam_member)  
+    #print("possible family candidates per strata", fam_member)  
     arr_of_models = list(chunks(model_architectures, fam_member))
-    print(arr_of_models)
-    print("len arr ", len(arr_of_models))
+    #print(arr_of_models)
+    #print("len arr ", len(arr_of_models))
     
     tasks = []
   
@@ -318,7 +319,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--batch_size', type=int, default=128, help='')
     parser.add_argument('--workers', type=int, default=4, help='')
-    parser.add_argument('--gpu_devices', type=int, nargs='+', default=[0, 1, 2, 3, 4, 5, 6, 7], help="")
+    parser.add_argument('--gpu_devices', type=int, nargs='+', default=[5, 6, 7], help="")
 
     parser.add_argument('--data', default='/srv/data/datasets/ImageNet', type=str,
                         help='path to ImageNet data')

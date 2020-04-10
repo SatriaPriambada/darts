@@ -18,7 +18,7 @@ from model import NetworkCIFAR as Network
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-import torchvision.datasets as dset
+
 import ray
 from ray import tune
 from ray.tune import track
@@ -58,7 +58,7 @@ async def per_res_train(device,
             "gpu": 1
         },
         verbose=1,
-        name="train_heterogenous_network_cifar"  # This is used to specify the logging directory.
+        name="train_mcts_hetero_cifar"  # This is used to specify the logging directory.
     )
 
     print('Finishing latency strata: {}'.format(device_id))
@@ -105,20 +105,16 @@ async def async_train(device,
 
 CIFAR_CLASSES = 10
 
-def get_data_loaders(cell_layers):
+def get_data_loaders(batch_size, workers, args):
     train_transform, valid_transform = utils._data_transforms_cifar10(args)
     train_data = dset.CIFAR10(root="~/data", train=True, download=True, transform=train_transform)
     valid_data = dset.CIFAR10(root="~/data", train=False, download=True, transform=valid_transform)
-    batch_size = EPOCH_SIZE
-    if cell_layers > 9:
-      batch_size = 64
-    elif cell_layers > 12:
-      batch_size = 1
+    
     train_loader = torch.utils.data.DataLoader(
-        train_data, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=2)
+        train_data, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=workers)
 
     test_loader = torch.utils.data.DataLoader(
-        valid_data, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=2)
+        valid_data, batch_size=batch_size, shuffle=False, pin_memory=True, num_workers=workers)
     return train_loader, test_loader
 
 def train_heterogenous_network_cifar(config):
@@ -136,8 +132,16 @@ def train_heterogenous_network_cifar(config):
         selected_layers
     )
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
+    workers = 4
+    batch_size = EPOCH_SIZE
+    if config["architecture"]["cell_layers"] > 18:
+      batch_size = 1
+    elif config["architecture"]["cell_layers"] > 12:
+      batch_size = 2
+    elif config["architecture"]["cell_layers"] > 9:
+      batch_size = 64
     
-    train_loader, test_loader = get_data_loaders(config["architecture"]["cell_layers"])
+    train_loader, test_loader = get_data_loaders(batch_size, workers, args)
 
     optimizer = optim.SGD(
         model.parameters(), lr=config["lr"], momentum=config["momentum"])
@@ -180,9 +184,12 @@ def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile,
       
       data = Variable(data).to(device)
       target = Variable(target).to(device)
-
+      logfile.write("data: {} target: {}\n".format(data, target))
+      logfile.flush()
       optimizer.zero_grad()
       logits, logits_aux = model(data)
+      logfile.write("logits: {} logits_aux: {}\n".format(logits, logits_aux))
+      logfile.flush()
       loss = criterion(logits, target)
       if auxiliary:
         loss_aux = criterion(logits_aux, target)
@@ -191,7 +198,7 @@ def torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader, logfile,
       logfile.write("loss {} \n".format(loss))
       logfile.flush()
       grad_clip = 5
-      nn.utils.clip_grad_norm(model.parameters(), grad_clip)
+      nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
       optimizer.step()
 
       prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
@@ -231,7 +238,7 @@ def torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device=torch
     return top1.avg, objs.avg
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("train.py")
+    parser = argparse.ArgumentParser("trainer_cifar.py")
     parser.add_argument('--data', type=str, default='../data', help='location of the data corpus')
     parser.add_argument('--batch_size', type=int, default=96, help='batch size')
     parser.add_argument('--learning_rate', type=float, default=0.025, help='init learning rate')
