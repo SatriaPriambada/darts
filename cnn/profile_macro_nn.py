@@ -19,10 +19,10 @@ from model_trainable import convert_str_to_CIFAR_Network
 import acc_profiler 
 import latency_profiler
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="7"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 import argparse
 
-filename = "arch_profile"
+filename = "arch_profile_mcts"
 OPORTUNITY_GAP_ARCHITECTURE = "generated_cifar_macro_mcts_mcts_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
