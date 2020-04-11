@@ -21,7 +21,7 @@ def draw_acc_subplot(df, subplot, color):
     y = df["acc"]
     x = df["mean_lat"]
     e = df["std_dev_lat"]
-    subplot.errorbar(x, y, xerr=e, fmt='.', mfc=color, mec=color,linestyle="", ecolor=[color], label=args.device, color=color)
+    subplot.errorbar(x, y, xerr=e, fmt='.', mfc=color, mec=color,linestyle="-", ecolor=[color], label=args.device, color=color)
     subplot.set_title('{} Params vs Latency Behaviour'.format(args.device))
     subplot.set_ylabel('acc(%)', fontsize=13)
     subplot.set_xlabel('latency(ms)', fontsize=13)
