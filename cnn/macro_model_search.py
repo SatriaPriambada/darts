@@ -261,6 +261,9 @@ class MacroNetwork(nn.Module):
                           drop_path_prob)
     print("biggest lat ", biggest_latency)
     target_latency = [ biggest_latency / (i + 1) for i in range(n_family)]
+    print("target_latency ", target_latency)
+    import sys
+    sys.exit(0)
     n_turn = n_family + 2
     current_node = mcts.Node(
       mcts.State(value=0, moves=[], turn=n_turn, n_family=n_family,
