@@ -23,7 +23,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="2"
 import argparse
 
 filename = "arch_profile_mcts"
-OPORTUNITY_GAP_ARCHITECTURE = "generated_cifar_macro_mcts_mcts_architecture_cpu_layers.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "t8_generated_cifar_macro_mcts_v3_mcts_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
 INPUT_SIZE = 32
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=256,
                                                 shuffle=True, num_workers=4)
 
-    df_op_gap = pd.read_csv(OPORTUNITY_GAP_ARCHITECTURE)
+    df_op_gap = pd.read_csv("mcts_generated/" + OPORTUNITY_GAP_ARCHITECTURE)
     sampled_architecture = connvert_df_to_list_arch(df_op_gap,
       init_channels, layers, auxiliary, CIFAR_CLASSES)
   
@@ -144,5 +144,5 @@ if __name__ == '__main__':
 
     model_df_with_acc_and_lat = profile_arch_lat_and_acc(dataset_name, 
         test_loader, sampled_architecture, criterion, device, drop_path_prob)
-    model_df_with_acc_and_lat.to_csv(Path(filename + '_{}.csv'.format(str(device))), 
+    model_df_with_acc_and_lat.to_csv(Path("mcts_generated/" + filename + "_" + OPORTUNITY_GAP_ARCHITECTURE), 
     index = None)
