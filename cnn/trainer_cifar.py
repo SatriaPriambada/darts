@@ -134,10 +134,8 @@ def train_heterogenous_network_cifar(config):
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
     workers = 4
     batch_size = EPOCH_SIZE
-    if config["architecture"]["cell_layers"] > 18:
-      batch_size = 1
-    elif config["architecture"]["cell_layers"] > 12:
-      batch_size = 2
+    if config["architecture"]["cell_layers"] > 12:
+      batch_size = 32
     elif config["architecture"]["cell_layers"] > 9:
       batch_size = 64
     
