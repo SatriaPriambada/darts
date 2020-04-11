@@ -72,7 +72,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--path', type=str, default='img', help='path to pdf image results')
     args = parser.parse_args()
     list_files = args.filename
-    
     if list_files is list:
         for csv_file in list_files:
             draw_errorbar_graph(csv_file, args.device, args.path) 

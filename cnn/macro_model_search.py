@@ -14,6 +14,7 @@ import random
 import itertools
 import re 
 import mcts
+import latency_profiler
 
 class MacroNetwork(nn.Module):
 
@@ -168,7 +169,61 @@ class MacroNetwork(nn.Module):
 
     return architectures
 
-      
+  def find_biggest_latency(self, dataset_name, 
+                          micro_genotype, 
+                          init_channels, 
+                          max_layers, 
+                          auxiliary,
+                          drop_path_prob):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    max_lat_genotypes = [micro_genotype for i in range(max_layers)]
+    if dataset_name == "cifar10":
+      INPUT_BATCH = 1
+      INPUT_CHANNEL = 3
+      INPUT_SIZE = 32
+      CLASSES = 10
+      model = HeterogenousNetworkCIFAR(
+        init_channels,
+        CLASSES,
+        max_layers,
+        auxiliary,
+        max_lat_genotypes
+      )
+
+    elif dataset_name == "imagenet":
+      INPUT_BATCH = 1
+      INPUT_CHANNEL = 3
+      INPUT_SIZE = 224
+      CLASSES = 1000
+      layer_depth = 25
+      model = HeterogenousNetworkImageNet(
+        init_channels,
+        CLASSES,
+        max_layers,
+        auxiliary,
+        max_lat_genotypes
+      )
+
+    else:
+      INPUT_BATCH = 1
+      INPUT_CHANNEL = 3
+      INPUT_SIZE = 32
+      CLASSES = 10
+      layer_depth = 40
+      model = HeterogenousNetworkCIFAR(
+        init_channels,
+        CLASSES,
+        layer_depth,
+        auxiliary,
+        max_lat_genotypes
+      )
+
+
+    model.drop_path_prob = drop_path_prob
+    dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, INPUT_SIZE, INPUT_SIZE).to(device)
+    mean_lat, latencies = latency_profiler.test_latency(model, dummy_input, device)
+    return latencies[98]
+
   def sample_mcts_architecture(self, 
                           dataset_name, 
                           nsample, 
@@ -198,7 +253,14 @@ class MacroNetwork(nn.Module):
     #print("HERE {}".format(valid_gen_choice))
     num_sims = 100
     architectures = []
-    target_latency = [(i + 1) for i in range(n_family)]
+    biggest_latency = self.find_biggest_latency(dataset_name,
+                          micro_genotypes["genotype"].to_list()[-1], 
+                          init_channels, 
+                          max_layers, 
+                          auxiliary,
+                          drop_path_prob)
+    print("biggest lat ", biggest_latency)
+    target_latency = [ biggest_latency / (i + 1) for i in range(n_family)]
     n_turn = n_family + 2
     current_node = mcts.Node(
       mcts.State(value=0, moves=[], turn=n_turn, n_family=n_family,

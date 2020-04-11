@@ -31,8 +31,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
 load_filename = "generated_micro"
-filename = "t3_generated_cifar_macro_mcts_v4_sim_100"
-NFAMILY = 3
+filename = "t8_generated_cifar_macro_mcts_v1_sim_100"
+NFAMILY = 8
 CIFAR_CLASSES = 10
 NUM_SAMPLE = 125
 CLUSTERS = 8
@@ -88,7 +88,7 @@ if __name__ == '__main__':
   dataset_name = 'cifar10'
   num_classes = 10
   filepath = "~/data/" + dataset_name
-  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+  device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
 
   print("Load Data from: {}".format(filepath))
   CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]

@@ -91,9 +91,7 @@ class State():
 			self.config["architecture"]["auxiliary"],
 			self.moves
 		)
-
 		model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
-
 
 		dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, 
 			INPUT_SIZE, INPUT_SIZE).to(self.config["device"])

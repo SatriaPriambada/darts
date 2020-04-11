@@ -109,7 +109,12 @@ if __name__ == '__main__':
     dataset_name = 'cifar10'
     num_classes = CIFAR_CLASSES
     filepath = "~/data/" + dataset_name
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if "gpu" in args.device:
+        print("profile on gpu")
+        device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
+    else:
+        print("profile on cpu")
+        device = torch.device('cpu')
 
     print("Load Data from: {}".format(filepath))
     CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
