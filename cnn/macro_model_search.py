@@ -248,7 +248,8 @@ class MacroNetwork(nn.Module):
       },
       "device": torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
       "lr": 0.025,
-      "momentum": 0.9
+      "momentum": 0.9,
+      "max_layers": max_layers
     }
 
     #print("HERE {}".format(valid_gen_choice))
@@ -266,14 +267,14 @@ class MacroNetwork(nn.Module):
     print("target_latency ", target_latency)
     n_turn = n_family + 2
     current_node = mcts.Node(
-      mcts.State(value=0, moves=[], turn=n_turn, n_family=n_family,
+      mcts.State(moves=[], turn=n_turn, n_family=n_family,
         target_latency=target_latency, config=config)
     )
 
     for fam_member in range(n_family):
       current_node = mcts.UCTSEARCH(num_sims / (fam_member + 1), current_node)
       print("fam_member ", fam_member)
-      print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
+      print("state: t {}, m {}".format( current_node.state.turn, current_node.state.moves))
       selected_layers = current_node.state.moves
       print("selected_med_idx {}".format(current_node.state.selected_med_idx))
       name = ';'.join([str(elem) for elem in selected_layers]) 

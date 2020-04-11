@@ -49,9 +49,8 @@ class State():
 	MOVES.append("none")
 	num_moves = len(MOVES)
 	
-	def __init__(self, value, moves, turn, n_family, target_latency, config):
+	def __init__(self, moves, turn, n_family, target_latency, config):
 		#print("MOVES {}".format(self.MOVES))
-		self.value = value
 		self.turn = turn
 		self.moves = [] #selected moves represent selected layers
 		self.selected_med_idx = [] #selected medioid layers
@@ -59,6 +58,7 @@ class State():
 		self.acc = 0 #current state acc in %
 		self.lat = 1000 #current state lat 99th in ms
 		self.target_latency = target_latency #array of target lat in ms
+		self.max_layers = config["max_layers"]
 		self.config = config
 		# print("__init called __ {}".format(self.moves))
 
@@ -71,7 +71,7 @@ class State():
 			nextmove.append(self.MOVES[rand_idx])
 		
 		self.moves += nextmove
-		next = State(self.value , self.moves, self.turn - 1, self.n_family, 
+		next = State(self.moves, self.turn - 1, self.n_family, 
 			self.target_latency, self.config)
 		return next
 
@@ -79,6 +79,10 @@ class State():
 		if self.turn == 0:
 			return True
 		return False
+
+	def __repr__(self):
+		s="State; turn: {} moves: {}, selected_med_idx: {}, lat: {}".format(self.turn, self.moves, self.selected_med_idx, self.lat)
+		return s
 
 	def get_acc_latency(self):
 		#For now Uses CIFAR as proxy to get acc and lat
@@ -91,10 +95,10 @@ class State():
 			self.config["architecture"]["auxiliary"],
 			self.moves
 		)
-                model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
-                model.to(self.config["device"])
-                dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL,INPUT_SIZE, INPUT_SIZE).to(self.config["device"])
-                mean_lat, latencies = latency_profiler.test_latency(model, dummy_input, self.config["device"])
+		model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
+		model.to(self.config["device"])
+		dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL,INPUT_SIZE, INPUT_SIZE).to(self.config["device"])
+		mean_lat, latencies = latency_profiler.test_latency(model, dummy_input, self.config["device"])
 		
 		batch_size = 32
 		workers = 4
@@ -134,7 +138,6 @@ class State():
 		return train_result
 
 	def reward(self):
-		w = 0.5
 		train_result = self.get_acc_latency()
 		self.acc = train_result["acc"]
 		self.lat = train_result["lat"]
@@ -142,9 +145,9 @@ class State():
 		lat_part = 1
 		for strata in l_stratas:
 			if self.lat < strata:
-				lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
-		acc_part = abs((1 - (self.acc/100))) ** w
-		r = 1 - (acc_part * lat_part)
+				lat_part = lat_part * abs((1 - (self.lat / strata)))
+		#acc_part = abs((1 - (self.acc/100))) ** w
+		r = 1 - (lat_part)
 		return r
 
 class Node():
@@ -167,7 +170,14 @@ class Node():
 	def __repr__(self):
 		s="Node; children: %d; visits: %d; reward: %f"%(len(self.children),self.visits,self.reward)
 		return s
-		
+
+	def layer_numbers(self):
+		layer_count = 0
+		while self.parent != None:
+			curr_parent = self.parent
+			layer_count += 1
+			self.parent = curr_parent.parent
+		return layer_count
 
 
 def UCTSEARCH(budget,root):
@@ -176,7 +186,8 @@ def UCTSEARCH(budget,root):
 			print("simulation: %d"%iter)
 			print(root)
 		front = TREEPOLICY(root)
-		reward, train_result = DEFAULTPOLICY(front.state)
+		print("front state ", front.state)
+		reward, train_result = DEFAULTPOLICY(front)
 		print("train_result[lat] ", train_result["lat"])
 		BACKUP(front, reward, train_result["lat"], train_result["acc"])
 	return BESTCHILD(root, 0)
@@ -184,20 +195,28 @@ def UCTSEARCH(budget,root):
 def TREEPOLICY(node):
 	#a hack to force 'exploitation' in a game where there are many options, and you may never/not want to fully expand first
 	while node.state.terminal() == False:
-		if len(node.children) == 0:
-			return EXPAND(node)
-		elif random.uniform(0,1) < .5:
-			node = BESTCHILD(node,SCALAR)
-		else:
-			if node.fully_expanded() == False:	
+		print("lay number ", node.layer_numbers(), " max_layers ", node.state.max_layers)
+		if node.layer_numbers() <= node.state.max_layers:
+			if len(node.children) == 0:
 				return EXPAND(node)
-			else:
+			elif random.uniform(0,1) < .5:
+				print("BESTCHILD after rand unifrom")
 				node = BESTCHILD(node,SCALAR)
+			else:
+				if node.fully_expanded() == False:	
+					return EXPAND(node)
+				else:
+					print("BESTCHILD if node fully expanded")
+					node = BESTCHILD(node,SCALAR)
+		else:
+			print("BESTCHILD if layer > max_layer")
+			node = BESTCHILD(node,SCALAR)
 	return node
 
 def EXPAND(node):
 	tried_children = [c.state for c in node.children]
 	new_state = node.state.next_state()
+	print("new state ", new_state)
 	while new_state in tried_children:
 		new_state = node.state.next_state()
 	node.add_child(new_state)
@@ -229,10 +248,10 @@ def BESTCHILD(node,scalar):
 	top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
 	return top_one
 
-def DEFAULTPOLICY(state):
-	while state.terminal() == False:
-		state = state.next_state()
-	return state.reward(), state.get_acc_latency()
+def DEFAULTPOLICY(node):
+	while node.state.terminal() == False:
+		node.state = node.state.next_state()
+	return node.state.reward(), node.state.get_acc_latency()
 
 def BACKUP(node, reward, latest_latency, latest_acc):
 	while node != None:
