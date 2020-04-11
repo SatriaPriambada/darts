@@ -45,10 +45,8 @@ def gaussian(X, mu, cov):
     return np.diagonal(1 / ((2 * np.pi) ** (n / 2) * np.linalg.det(cov) ** 0.5) * np.exp(-0.5 * np.dot(np.dot(diff.T, np.linalg.inv(cov)), diff))).reshape(-1, 1)
 
 class State():
-	NUM_TURNS = 1	
-	GOAL = 10
-	MAX_VALUE= (5.0*(NUM_TURNS-1)*NUM_TURNS) / 2
 	MOVES = pd.read_csv('generated_micro_cpu_center.csv')["genotype"].to_list()
+	MOVES.append("none")
 	num_moves = len(MOVES)
 	
 	def __init__(self, value, moves, turn, n_family, target_latency, config):
@@ -66,7 +64,7 @@ class State():
 
 	def next_state(self):
 		nextmove = []
-		ln_valid_choice = len(self.MOVES) - 1 
+		ln_valid_choice = len(self.MOVES) - 1
 		for i in range(self.turn):
 			rand_idx = random.randint(0, ln_valid_choice) 
 			self.selected_med_idx.append(rand_idx)
@@ -146,8 +144,9 @@ class State():
 		l_stratas = self.target_latency
 		lat_part = 1
 		for strata in l_stratas:
-			lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
-		acc_part = 1 # abs((1 - (self.acc/100))) ** w
+			if self.lat < strata:
+				lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
+		acc_part = abs((1 - (self.acc/100))) ** w
 		r = 1 - (acc_part * lat_part)
 		return r
 
@@ -211,21 +210,16 @@ def EXPAND(node):
 def BESTCHILD(node,scalar):
 	bestscore = 0.0
 	children_lat = [c.state.lat for c in node.children]
-	children_acc = [c.state.acc for c in node.children]
+	children_reward = [c.reward for c in node.children]
 	print("children_lat ", children_lat)
-	print("children_acc ", children_acc)
+	print("children_reward ", children_reward)
 	target_latency = node.state.target_latency
 	#get gaussian model
-	x0 = np.array(node.children)
-	#mu = np.mean(x0, axis=0)
-	#cov = np.dot((x0 - mu).T, x0 - mu) / (x0.shape[0] - 1)
-	#y = gaussian(x0, mu=mu, cov=cov)
-	#print(y)
 	#mix gaussian model
 	for c in node.children:
 		exploit = c.reward / c.visits
-		explore = math.sqrt(2.0*math.log(node.visits)/float(c.visits))	
-		score = exploit+scalar*explore
+		explore = math.sqrt( 2.0 * math.log(node.visits) / float(c.visits))	
+		score = exploit + scalar * explore
 
 		if score == bestscore:
 			bestchildren.append(c)
@@ -233,7 +227,7 @@ def BESTCHILD(node,scalar):
 			bestchildren = [c]
 			bestscore = score
 	if len(bestchildren) == 0:
-		logger.warn("OOPS: no best child found, probably fatal")
+		print("OOPS: no best child found, probably fatal")
 	print("bestchildren: ", bestchildren, ", type: ", type(bestchildren))
 	top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
 	return top_one

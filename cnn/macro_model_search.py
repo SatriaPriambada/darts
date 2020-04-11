@@ -196,11 +196,12 @@ class MacroNetwork(nn.Module):
     }
 
     #print("HERE {}".format(valid_gen_choice))
-    num_sims = 25
+    num_sims = 100
     architectures = []
     target_latency = [(i + 1) for i in range(n_family)]
+    n_turn = n_family + 2
     current_node = mcts.Node(
-      mcts.State(value=0, moves=[], turn=10, n_family=n_family,
+      mcts.State(value=0, moves=[], turn=n_turn, n_family=n_family,
         target_latency=target_latency, config=config)
     )
 
