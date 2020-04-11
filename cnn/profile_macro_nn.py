@@ -23,7 +23,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="2"
 import argparse
 
 filename = "arch_profile_mcts"
-OPORTUNITY_GAP_ARCHITECTURE = "t8_generated_cifar_macro_mcts_v3_mcts_architecture_cpu_layers.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "t3_generated_cifar_macro_mcts_v4_sim_100_mcts_architecture_cpu_layers.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
 INPUT_SIZE = 32
