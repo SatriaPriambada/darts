@@ -31,8 +31,8 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
 load_filename = "generated_micro"
-filename = "generated_cifar_macro_mcts"
-NFAMILY = 8
+filename = "t3_generated_cifar_macro_mcts_v4_sim_100"
+NFAMILY = 3
 CIFAR_CLASSES = 10
 NUM_SAMPLE = 125
 CLUSTERS = 8
