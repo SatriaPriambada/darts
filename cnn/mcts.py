@@ -49,7 +49,7 @@ class State():
 	MOVES.append("none")
 	num_moves = len(MOVES)
 	
-	def __init__(self, moves, turn, n_family, target_latency, config):
+	def __init__(self, moves, turn, n_family, target_latency, max_layers, config):
 		#print("MOVES {}".format(self.MOVES))
 		self.turn = turn
 		self.moves = [] #selected moves represent selected layers
@@ -58,21 +58,24 @@ class State():
 		self.acc = 0 #current state acc in %
 		self.lat = 1000 #current state lat 99th in ms
 		self.target_latency = target_latency #array of target lat in ms
-		self.max_layers = config["max_layers"]
+		self.max_layers = max_layers
 		self.config = config
 		# print("__init called __ {}".format(self.moves))
 
 	def next_state(self):
 		nextmove = []
+		med_idx = []
 		ln_valid_choice = len(self.MOVES) - 1
 		for i in range(self.turn):
 			rand_idx = random.randint(0, ln_valid_choice) 
-			self.selected_med_idx.append(rand_idx)
+			med_idx.append(rand_idx)
 			nextmove.append(self.MOVES[rand_idx])
 		
-		self.moves += nextmove
+		self.moves = self.moves + nextmove
+		self.selected_med_idx = self.selected_med_idx + med_idx
+		print("NEXTSTATE self.selected_med_idx ", self.selected_med_idx)
 		next = State(self.moves, self.turn - 1, self.n_family, 
-			self.target_latency, self.config)
+			self.target_latency, self.max_layers, self.config)
 		return next
 
 	def terminal(self):
@@ -171,15 +174,6 @@ class Node():
 		s="Node; children: %d; visits: %d; reward: %f"%(len(self.children),self.visits,self.reward)
 		return s
 
-	def layer_numbers(self):
-		layer_count = 0
-		while self.parent != None:
-			curr_parent = self.parent
-			layer_count += 1
-			self.parent = curr_parent.parent
-		return layer_count
-
-
 def UCTSEARCH(budget,root):
 	for iter in range(int(budget)):
 		if (iter % 10000) == 9999:
@@ -195,31 +189,32 @@ def UCTSEARCH(budget,root):
 def TREEPOLICY(node):
 	#a hack to force 'exploitation' in a game where there are many options, and you may never/not want to fully expand first
 	while node.state.terminal() == False:
-		print("lay number ", node.layer_numbers(), " max_layers ", node.state.max_layers)
-		if node.layer_numbers() <= node.state.max_layers:
+		if len(node.state.moves) <= node.state.max_layers:
 			if len(node.children) == 0:
 				return EXPAND(node)
 			elif random.uniform(0,1) < .5:
-				print("BESTCHILD after rand unifrom")
 				node = BESTCHILD(node,SCALAR)
 			else:
 				if node.fully_expanded() == False:	
 					return EXPAND(node)
 				else:
-					print("BESTCHILD if node fully expanded")
 					node = BESTCHILD(node,SCALAR)
 		else:
-			print("BESTCHILD if layer > max_layer")
-			node = BESTCHILD(node,SCALAR)
+			print("EXCEED MAX LAYERS WITH CURR LENGTH: {} and LIMIT {}"
+				.format(len(node.state.moves), node.state.max_layers))
+			return BESTCHILD(node,SCALAR)
 	return node
 
 def EXPAND(node):
+	print("EXPAND")
 	tried_children = [c.state for c in node.children]
 	new_state = node.state.next_state()
 	print("new state ", new_state)
 	while new_state in tried_children:
 		new_state = node.state.next_state()
+		print("EXPAND to new_state ", new_state)
 	node.add_child(new_state)
+	print("EXPAND to node.add_child ", node)
 	return node.children[-1]
 
 #current this uses the most vanilla MCTS formula it is worth experimenting with THRESHOLD ASCENT (TAGS)

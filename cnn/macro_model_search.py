@@ -253,7 +253,7 @@ class MacroNetwork(nn.Module):
     }
 
     #print("HERE {}".format(valid_gen_choice))
-    num_sims = 100
+    num_sims = 10
     architectures = []
     biggest_latency = self.find_biggest_latency(dataset_name,
                           micro_genotypes["genotype"].to_list()[-1], 
@@ -268,7 +268,7 @@ class MacroNetwork(nn.Module):
     n_turn = n_family + 2
     current_node = mcts.Node(
       mcts.State(moves=[], turn=n_turn, n_family=n_family,
-        target_latency=target_latency, config=config)
+        target_latency=target_latency, max_layers=max_layers, config=config)
     )
 
     for fam_member in range(n_family):
@@ -279,10 +279,12 @@ class MacroNetwork(nn.Module):
       print("selected_med_idx {}".format(current_node.state.selected_med_idx))
       name = ';'.join([str(elem) for elem in selected_layers]) 
       none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
+      print("compare lenthnone_layer {}, selected_layers {}".format(len(none_layers), len(selected_layers)))
+      cell_layers = len(selected_layers) - len(none_layers)
       skip_conn = [i.start() for i in re.finditer("skip", name)]
       arch_dict = {
         "selected_medioid_idx": current_node.state.selected_med_idx,
-        "cell_layers": len(selected_layers) - len(none_layers),
+        "cell_layers": cell_layers,
         "none_layers": len(none_layers),
         "skip_conn": len(skip_conn),
         "name": name
@@ -292,7 +294,7 @@ class MacroNetwork(nn.Module):
           dataset_name, 
           arch_dict, 
           init_channels,
-          len(selected_layers) - len(none_layers), 
+          cell_layers, 
           auxiliary, 
           selected_layers))
     
