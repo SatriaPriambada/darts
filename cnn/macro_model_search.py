@@ -14,6 +14,7 @@ import random
 import itertools
 import re 
 import mcts
+import latency_profiler
 
 class MacroNetwork(nn.Module):
 
@@ -168,7 +169,62 @@ class MacroNetwork(nn.Module):
 
     return architectures
 
-      
+  def find_biggest_latency(self, dataset_name, 
+                          micro_genotype, 
+                          init_channels, 
+                          max_layers, 
+                          auxiliary,
+                          drop_path_prob):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    max_lat_genotypes = [micro_genotype for i in range(max_layers)]
+    if dataset_name == "cifar10":
+      INPUT_BATCH = 1
+      INPUT_CHANNEL = 3
+      INPUT_SIZE = 32
+      CLASSES = 10
+      model = HeterogenousNetworkCIFAR(
+        init_channels,
+        CLASSES,
+        max_layers,
+        auxiliary,
+        max_lat_genotypes
+      )
+
+    elif dataset_name == "imagenet":
+      INPUT_BATCH = 1
+      INPUT_CHANNEL = 3
+      INPUT_SIZE = 224
+      CLASSES = 1000
+      layer_depth = 25
+      model = HeterogenousNetworkImageNet(
+        init_channels,
+        CLASSES,
+        max_layers,
+        auxiliary,
+        max_lat_genotypes
+      )
+
+    else:
+      INPUT_BATCH = 1
+      INPUT_CHANNEL = 3
+      INPUT_SIZE = 32
+      CLASSES = 10
+      layer_depth = 40
+      model = HeterogenousNetworkCIFAR(
+        init_channels,
+        CLASSES,
+        layer_depth,
+        auxiliary,
+        max_lat_genotypes
+      )
+
+
+    model.drop_path_prob = drop_path_prob
+    model.to(device)
+    dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, INPUT_SIZE, INPUT_SIZE).to(device)
+    mean_lat, latencies = latency_profiler.test_latency(model, dummy_input, device)
+    return latencies[98]
+
   def sample_mcts_architecture(self, 
                           dataset_name, 
                           nsample, 
@@ -196,27 +252,38 @@ class MacroNetwork(nn.Module):
     }
 
     #print("HERE {}".format(valid_gen_choice))
-    num_sims = 100
+    num_sims = 25
     architectures = []
-    target_latency = [(i + 1) for i in range(n_family)]
+    biggest_latency = self.find_biggest_latency(dataset_name,
+                          micro_genotypes["genotype"].to_list()[-1], 
+                          init_channels, 
+                          max_layers, 
+                          auxiliary,
+                          drop_path_prob)
+    print("biggest lat ", biggest_latency)
+    partition_lat = biggest_latency / n_family
+    target_latency = [ partition_lat * (i + 1) for i in range(n_family)]
+    print("target_latency ", target_latency)
     n_turn = n_family + 2
     current_node = mcts.Node(
-      mcts.State(value=0, moves=[], turn=n_turn, n_family=n_family,
-        target_latency=target_latency, config=config)
+      mcts.State(moves=[], turn=n_turn, n_family=n_family,
+        target_latency=target_latency, max_layers=max_layers, config=config)
     )
 
     for fam_member in range(n_family):
       current_node = mcts.UCTSEARCH(num_sims / (fam_member + 1), current_node)
       print("fam_member ", fam_member)
-      print("state: v {}, t {}, m {}".format(current_node.state.value, current_node.state.turn, current_node.state.moves))
       selected_layers = current_node.state.moves
+      print("state: ln {} moves {}".format(len(selected_layers), selected_layers))
       print("selected_med_idx {}".format(current_node.state.selected_med_idx))
       name = ';'.join([str(elem) for elem in selected_layers]) 
       none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
+      print("compare lenthnone_layer {}, selected_layers {}".format(len(none_layers), len(selected_layers)))
+      cell_layers = len(selected_layers) - len(none_layers)
       skip_conn = [i.start() for i in re.finditer("skip", name)]
       arch_dict = {
         "selected_medioid_idx": current_node.state.selected_med_idx,
-        "cell_layers": len(selected_layers) - len(none_layers),
+        "cell_layers": cell_layers,
         "none_layers": len(none_layers),
         "skip_conn": len(skip_conn),
         "name": name
@@ -226,11 +293,9 @@ class MacroNetwork(nn.Module):
           dataset_name, 
           arch_dict, 
           init_channels,
-          len(selected_layers) - len(none_layers), 
+          cell_layers, 
           auxiliary, 
           selected_layers))
     
-    print(len(architectures), ";;; arch ")
+    print(len(architectures), ";;; arch ")
     return architectures
-
-

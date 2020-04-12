@@ -31,6 +31,9 @@ import time
 import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
+import os
+gpu_devices = "1,2,3,4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = gpu_devices
 
 OPORTUNITY_GAP_ARCHITECTURE = "test_arch.csv"
 # OPORTUNITY_GAP_ARCHITECTURE = "generated_macro_architecture_cpu_layers.csv"

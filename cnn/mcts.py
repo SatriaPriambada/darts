@@ -19,13 +19,11 @@ Original version can be seen on https://github.com/ajax98/catan/blob/master/mcts
 A quick Monte Carlo Tree Search implementation.  For more details on MCTS see See http://pubs.doc.ic.ac.uk/survey-mcts-methods/survey-mcts-methods.pdf
 The State is just a game where you have NUM_TURNS and at turn i you can make
 a choice from set of possible moves.  The goal is for the accumulated value to be as close to 0 as possible.
-
 For our purpose, we change the reward function is defined as (1 - accumulated value)
 Accumulated value is latency * accuracy profile. 
 We definied our best reward model candidates as 
 (1) model with tail latency 99 closest to the latency strata
 (2) model with highest accuracy
-
 The game choice is not very that important but it allows one to study MCTS.  Some features 
 of the example by design are that moves do not commute and early mistakes are more costly.  
 In particular there are two models of best child that one can use 
@@ -49,9 +47,8 @@ class State():
 	MOVES.append("none")
 	num_moves = len(MOVES)
 	
-	def __init__(self, value, moves, turn, n_family, target_latency, config):
+	def __init__(self, moves, turn, n_family, target_latency, max_layers, config):
 		#print("MOVES {}".format(self.MOVES))
-		self.value = value
 		self.turn = turn
 		self.moves = [] #selected moves represent selected layers
 		self.selected_med_idx = [] #selected medioid layers
@@ -59,20 +56,24 @@ class State():
 		self.acc = 0 #current state acc in %
 		self.lat = 1000 #current state lat 99th in ms
 		self.target_latency = target_latency #array of target lat in ms
+		self.max_layers = max_layers
 		self.config = config
 		# print("__init called __ {}".format(self.moves))
 
 	def next_state(self):
 		nextmove = []
+		med_idx = []
 		ln_valid_choice = len(self.MOVES) - 1
 		for i in range(self.turn):
 			rand_idx = random.randint(0, ln_valid_choice) 
-			self.selected_med_idx.append(rand_idx)
+			med_idx.append(rand_idx)
 			nextmove.append(self.MOVES[rand_idx])
 		
-		self.moves += nextmove
-		next = State(self.value , self.moves, self.turn - 1, self.n_family, 
-			self.target_latency, self.config)
+		self.moves = self.moves + nextmove
+		self.selected_med_idx = self.selected_med_idx + med_idx
+		print("NEXTSTATE self.selected_med_idx ", self.selected_med_idx)
+		next = State(self.moves, self.turn - 1, self.n_family, 
+			self.target_latency, self.max_layers, self.config)
 		return next
 
 	def terminal(self):
@@ -91,15 +92,12 @@ class State():
 			self.config["architecture"]["auxiliary"],
 			self.moves
 		)
-
 		model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
-
-
-		dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL, 
-			INPUT_SIZE, INPUT_SIZE).to(self.config["device"])
+		model.to(self.config["device"])
+		dummy_input = torch.zeros(INPUT_BATCH, INPUT_CHANNEL,INPUT_SIZE, INPUT_SIZE).to(self.config["device"])
 		mean_lat, latencies = latency_profiler.test_latency(model, dummy_input, self.config["device"])
 		
-		batch_size = 16
+		batch_size = 32
 		workers = 4
 		args = Namespace(
 			cutout=False,
@@ -170,8 +168,6 @@ class Node():
 	def __repr__(self):
 		s="Node; children: %d; visits: %d; reward: %f"%(len(self.children),self.visits,self.reward)
 		return s
-		
-
 
 def UCTSEARCH(budget,root):
 	for iter in range(int(budget)):
@@ -187,28 +183,38 @@ def UCTSEARCH(budget,root):
 def TREEPOLICY(node):
 	#a hack to force 'exploitation' in a game where there are many options, and you may never/not want to fully expand first
 	while node.state.terminal() == False:
-		if len(node.children) == 0:
-			return EXPAND(node)
-		elif random.uniform(0,1) < .5:
-			node = BESTCHILD(node,SCALAR)
-		else:
-			if node.fully_expanded() == False:	
+		if len(node.state.moves) <= node.state.max_layers:
+			if len(node.children) == 0:
 				return EXPAND(node)
-			else:
+			elif random.uniform(0,1) < .5:
 				node = BESTCHILD(node,SCALAR)
+			else:
+				if node.fully_expanded() == False:	
+					return EXPAND(node)
+				else:
+					node = BESTCHILD(node,SCALAR)
+		else:
+			print("EXCEED MAX LAYERS WITH CURR LENGTH: {} and LIMIT {}"
+				.format(len(node.state.moves), node.state.max_layers))
+			node.state.moves = node.state.moves[:node.state.max_layers]
+			return BESTCHILD(node, SCALAR)
 	return node
 
 def EXPAND(node):
+	print("EXPAND")
 	tried_children = [c.state for c in node.children]
 	new_state = node.state.next_state()
 	while new_state in tried_children:
 		new_state = node.state.next_state()
+		print("EXPAND to new_state ", new_state)
 	node.add_child(new_state)
+	print("EXPAND to node.add_child ", node)
 	return node.children[-1]
 
 #current this uses the most vanilla MCTS formula it is worth experimenting with THRESHOLD ASCENT (TAGS)
 def BESTCHILD(node,scalar):
 	bestscore = 0.0
+	bestchildren = []
 	children_lat = [c.state.lat for c in node.children]
 	children_reward = [c.reward for c in node.children]
 	print("children_lat ", children_lat)
@@ -216,21 +222,24 @@ def BESTCHILD(node,scalar):
 	target_latency = node.state.target_latency
 	#get gaussian model
 	#mix gaussian model
-	for c in node.children:
-		exploit = c.reward / c.visits
-		explore = math.sqrt( 2.0 * math.log(node.visits) / float(c.visits))	
-		score = exploit + scalar * explore
+	if not node.children:
+		return node
+	else:
+		for c in node.children:
+			exploit = c.reward / c.visits
+			explore = math.sqrt( 2.0 * math.log(node.visits) / float(c.visits))	
+			score = exploit + scalar * explore
 
-		if score == bestscore:
-			bestchildren.append(c)
-		if score > bestscore:
-			bestchildren = [c]
-			bestscore = score
-	if len(bestchildren) == 0:
-		print("OOPS: no best child found, probably fatal")
-	print("bestchildren: ", bestchildren, ", type: ", type(bestchildren))
-	top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
-	return top_one
+			if score == bestscore:
+				bestchildren.append(c)
+			if score > bestscore:
+				bestchildren = [c]
+				bestscore = score
+		if len(bestchildren) == 0:
+			print("OOPS: no best child found, probably fatal")
+		print("bestchildren: ", bestchildren, ", type: ", type(bestchildren))
+		top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
+		return top_one
 
 def DEFAULTPOLICY(state):
 	while state.terminal() == False:
