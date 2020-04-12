@@ -248,8 +248,7 @@ class MacroNetwork(nn.Module):
       },
       "device": torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
       "lr": 0.025,
-      "momentum": 0.9,
-      "max_layers": max_layers
+      "momentum": 0.9
     }
 
     #print("HERE {}".format(valid_gen_choice))
@@ -274,8 +273,8 @@ class MacroNetwork(nn.Module):
     for fam_member in range(n_family):
       current_node = mcts.UCTSEARCH(num_sims / (fam_member + 1), current_node)
       print("fam_member ", fam_member)
-      print("state: t {}, m {}".format( current_node.state.turn, current_node.state.moves))
       selected_layers = current_node.state.moves
+      print("state: ln {} moves {}".format(len(selected_layers), selected_layers))
       print("selected_med_idx {}".format(current_node.state.selected_med_idx))
       name = ';'.join([str(elem) for elem in selected_layers]) 
       none_layers = [i for i, x in enumerate(selected_layers) if x == "none"]
@@ -298,7 +297,5 @@ class MacroNetwork(nn.Module):
           auxiliary, 
           selected_layers))
     
-    print(len(architectures), ";;; arch ")
+    print(len(architectures), ";;; arch ")
     return architectures
-
-

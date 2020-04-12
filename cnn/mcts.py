@@ -19,13 +19,11 @@ Original version can be seen on https://github.com/ajax98/catan/blob/master/mcts
 A quick Monte Carlo Tree Search implementation.  For more details on MCTS see See http://pubs.doc.ic.ac.uk/survey-mcts-methods/survey-mcts-methods.pdf
 The State is just a game where you have NUM_TURNS and at turn i you can make
 a choice from set of possible moves.  The goal is for the accumulated value to be as close to 0 as possible.
-
 For our purpose, we change the reward function is defined as (1 - accumulated value)
 Accumulated value is latency * accuracy profile. 
 We definied our best reward model candidates as 
 (1) model with tail latency 99 closest to the latency strata
 (2) model with highest accuracy
-
 The game choice is not very that important but it allows one to study MCTS.  Some features 
 of the example by design are that moves do not commute and early mistakes are more costly.  
 In particular there are two models of best child that one can use 
@@ -83,10 +81,6 @@ class State():
 			return True
 		return False
 
-	def __repr__(self):
-		s="State; turn: {} moves: {}, selected_med_idx: {}, lat: {}".format(self.turn, self.moves, self.selected_med_idx, self.lat)
-		return s
-
 	def get_acc_latency(self):
 		#For now Uses CIFAR as proxy to get acc and lat
 		#Might add ImageNet later
@@ -141,6 +135,7 @@ class State():
 		return train_result
 
 	def reward(self):
+		w = 0.5
 		train_result = self.get_acc_latency()
 		self.acc = train_result["acc"]
 		self.lat = train_result["lat"]
@@ -148,9 +143,9 @@ class State():
 		lat_part = 1
 		for strata in l_stratas:
 			if self.lat < strata:
-				lat_part = lat_part * abs((1 - (self.lat / strata)))
-		#acc_part = abs((1 - (self.acc/100))) ** w
-		r = 1 - (lat_part)
+				lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
+		acc_part = abs((1 - (self.acc/100))) ** w
+		r = 1 - (acc_part * lat_part)
 		return r
 
 class Node():
@@ -180,8 +175,7 @@ def UCTSEARCH(budget,root):
 			print("simulation: %d"%iter)
 			print(root)
 		front = TREEPOLICY(root)
-		print("front state ", front.state)
-		reward, train_result = DEFAULTPOLICY(front)
+		reward, train_result = DEFAULTPOLICY(front.state)
 		print("train_result[lat] ", train_result["lat"])
 		BACKUP(front, reward, train_result["lat"], train_result["acc"])
 	return BESTCHILD(root, 0)
@@ -209,7 +203,6 @@ def EXPAND(node):
 	print("EXPAND")
 	tried_children = [c.state for c in node.children]
 	new_state = node.state.next_state()
-	print("new state ", new_state)
 	while new_state in tried_children:
 		new_state = node.state.next_state()
 		print("EXPAND to new_state ", new_state)
@@ -243,10 +236,10 @@ def BESTCHILD(node,scalar):
 	top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
 	return top_one
 
-def DEFAULTPOLICY(node):
-	while node.state.terminal() == False:
-		node.state = node.state.next_state()
-	return node.state.reward(), node.state.get_acc_latency()
+def DEFAULTPOLICY(state):
+	while state.terminal() == False:
+		state = state.next_state()
+	return state.reward(), state.get_acc_latency()
 
 def BACKUP(node, reward, latest_latency, latest_acc):
 	while node != None:
