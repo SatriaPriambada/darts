@@ -196,7 +196,8 @@ def TREEPOLICY(node):
 		else:
 			print("EXCEED MAX LAYERS WITH CURR LENGTH: {} and LIMIT {}"
 				.format(len(node.state.moves), node.state.max_layers))
-			return BESTCHILD(node,SCALAR)
+			node.state.moves = node.state.moves[:node.state.max_layers]
+			return BESTCHILD(node, SCALAR)
 	return node
 
 def EXPAND(node):
@@ -213,6 +214,7 @@ def EXPAND(node):
 #current this uses the most vanilla MCTS formula it is worth experimenting with THRESHOLD ASCENT (TAGS)
 def BESTCHILD(node,scalar):
 	bestscore = 0.0
+	bestchildren = []
 	children_lat = [c.state.lat for c in node.children]
 	children_reward = [c.reward for c in node.children]
 	print("children_lat ", children_lat)
@@ -220,21 +222,24 @@ def BESTCHILD(node,scalar):
 	target_latency = node.state.target_latency
 	#get gaussian model
 	#mix gaussian model
-	for c in node.children:
-		exploit = c.reward / c.visits
-		explore = math.sqrt( 2.0 * math.log(node.visits) / float(c.visits))	
-		score = exploit + scalar * explore
+	if not node.children:
+		return node
+	else:
+		for c in node.children:
+			exploit = c.reward / c.visits
+			explore = math.sqrt( 2.0 * math.log(node.visits) / float(c.visits))	
+			score = exploit + scalar * explore
 
-		if score == bestscore:
-			bestchildren.append(c)
-		if score > bestscore:
-			bestchildren = [c]
-			bestscore = score
-	if len(bestchildren) == 0:
-		print("OOPS: no best child found, probably fatal")
-	print("bestchildren: ", bestchildren, ", type: ", type(bestchildren))
-	top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
-	return top_one
+			if score == bestscore:
+				bestchildren.append(c)
+			if score > bestscore:
+				bestchildren = [c]
+				bestscore = score
+		if len(bestchildren) == 0:
+			print("OOPS: no best child found, probably fatal")
+		print("bestchildren: ", bestchildren, ", type: ", type(bestchildren))
+		top_one = sorted(bestchildren, key=lambda x: x.reward, reverse=True)[0]
+		return top_one
 
 def DEFAULTPOLICY(state):
 	while state.terminal() == False:

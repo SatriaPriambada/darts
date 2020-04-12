@@ -252,7 +252,7 @@ class MacroNetwork(nn.Module):
     }
 
     #print("HERE {}".format(valid_gen_choice))
-    num_sims = 10
+    num_sims = 25
     architectures = []
     biggest_latency = self.find_biggest_latency(dataset_name,
                           micro_genotypes["genotype"].to_list()[-1], 
