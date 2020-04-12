@@ -39,7 +39,7 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "arch_below_12.csv"
+OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v6_sim_25.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 128
 
@@ -134,10 +134,8 @@ def train_heterogenous_network_cifar(config):
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
     workers = 4
     batch_size = EPOCH_SIZE
-    if config["architecture"]["cell_layers"] > 18:
-      batch_size = 1
-    elif config["architecture"]["cell_layers"] > 12:
-      batch_size = 2
+    if config["architecture"]["cell_layers"] > 12:
+      batch_size = 32
     elif config["architecture"]["cell_layers"] > 9:
       batch_size = 64
     
