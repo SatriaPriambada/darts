@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 EPOCH_SIZE = 512
 TEST_SIZE = 256
 
+
 class TrainMNIST(tune.Trainable):
     def _setup(self, config):
         use_cuda = config.get("use_gpu") and torch.cuda.is_available()
@@ -32,11 +33,11 @@ class TrainMNIST(tune.Trainable):
         self.optimizer = optim.SGD(
             self.model.parameters(),
             lr=config.get("lr", 0.01),
-            momentum=config.get("momentum", 0.9))
+            momentum=config.get("momentum", 0.9),
+        )
 
     def _train(self):
-        train(
-            self.model, self.optimizer, self.train_loader, device=self.device)
+        train(self.model, self.optimizer, self.train_loader, device=self.device)
         acc = test(self.model, self.test_loader, self.device)
         return {"mean_accuracy": acc}
 
@@ -50,29 +51,27 @@ class TrainMNIST(tune.Trainable):
 
 
 def convert_str_to_CIFAR_Network(
-        name,
-        selected_layers, 
-        cell_layers,
-        none_layers,
-        skip_conn,
-        init_channels, 
-        layers, 
-        auxiliary,
-        n_classes):
-    
+    name,
+    selected_layers,
+    cell_layers,
+    none_layers,
+    skip_conn,
+    init_channels,
+    layers,
+    auxiliary,
+    n_classes,
+):
+
     return {
-            'name': name,
-            'cell_layers': cell_layers,
-            'none_layers': none_layers,
-            'skip_conn': skip_conn,
-            'model': HeterogenousNetworkCIFAR(
-                init_channels, 
-                n_classes, 
-                layers, 
-                auxiliary, 
-                selected_layers
-            )
-        }
+        "name": name,
+        "cell_layers": cell_layers,
+        "none_layers": none_layers,
+        "skip_conn": skip_conn,
+        "model": HeterogenousNetworkCIFAR(
+            init_channels, n_classes, layers, auxiliary, selected_layers
+        ),
+    }
+
 
 class TrainHeteroNetCIFAR(tune.Trainable):
     def _setup(self, config):
@@ -83,16 +82,16 @@ class TrainHeteroNetCIFAR(tune.Trainable):
         print("[Tio]Start setup MODEL {}".format(config))
         model_conf = config["model_conf"]
         print("[Tio]New MODEL {}".format(model_conf))
-        self.model = model_conf['model']
+        self.model = model_conf["model"]
         self.model.to(self.device)
         self.optimizer = optim.SGD(
             self.model.parameters(),
             lr=config.get("lr", 0.01),
-            momentum=config.get("momentum", 0.9))
+            momentum=config.get("momentum", 0.9),
+        )
 
     def _train(self):
-        train(
-            self.model, self.optimizer, self.train_loader, device=self.device)
+        train(self.model, self.optimizer, self.train_loader, device=self.device)
         acc = test(self.model, self.test_loader, self.device)
         return {"mean_accuracy": acc}
 
