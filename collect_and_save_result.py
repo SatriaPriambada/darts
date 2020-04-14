@@ -48,7 +48,7 @@ def draw_acc_subplot(df, subplot, color):
 
 def update_df_acc(file_name, device, path):
     df = pd.read_csv(file_name)
-    folder_path = "~/ray_results/train_cifar_simontam/mcts_8_models"
+    folder_path = "~/ray_results/train_cifar_simontam/train_mcts_cifar_13_04_2020"
     folder_path = os.path.expanduser(folder_path)
     # print("folder_path: {}".format(folder_path))
     acc = 0
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "--filename",
         nargs="+",
         type=str,
-        default="arch_profile_gpu-v100.csv",
+        default="mcts_generated/arch_profile_mcts_v7_t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv",
         help="start system with test config",
     )
     parser.add_argument(
