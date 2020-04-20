@@ -62,8 +62,8 @@ def test(model, data_loader, device=torch.device("cpu")):
 
 def get_data_loaders():
     mnist_transforms = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.1307, ), (0.3081, ))])
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+    )
 
     # We add FileLock here because multiple workers will want to
     # download data, and this may cause overwrites since
@@ -71,16 +71,16 @@ def get_data_loaders():
     with FileLock(os.path.expanduser("~/data.lock")):
         train_loader = torch.utils.data.DataLoader(
             datasets.MNIST(
-                "~/data",
-                train=True,
-                download=True,
-                transform=mnist_transforms),
+                "~/data", train=True, download=True, transform=mnist_transforms
+            ),
             batch_size=64,
-            shuffle=True)
+            shuffle=True,
+        )
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST("~/data", train=False, transform=mnist_transforms),
         batch_size=64,
-        shuffle=True)
+        shuffle=True,
+    )
     return train_loader, test_loader
 
 
@@ -91,7 +91,8 @@ def train_mnist(config):
     model = ConvNet().to(device)
 
     optimizer = optim.SGD(
-        model.parameters(), lr=config["lr"], momentum=config["momentum"])
+        model.parameters(), lr=config["lr"], momentum=config["momentum"]
+    )
 
     while True:
         train(model, optimizer, train_loader, device)

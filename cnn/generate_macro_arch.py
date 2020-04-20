@@ -31,7 +31,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
 load_filename = "generated_micro"
-filename = "generated_cifar_macro_mcts"
+filename = "t8_generated_cifar_macro_mcts_v7_sim_100"
 NFAMILY = 8
 CIFAR_CLASSES = 10
 NUM_SAMPLE = 125
@@ -62,7 +62,7 @@ def generate_macro(dataset_name,
     
   macro_network = MacroNetwork(init_channels, CIFAR_CLASSES, 
     layers, criterion, device=device)
-  micro_genotypes = pd.read_csv(load_filename + '_{}_center.csv'.format(str(device)))
+  micro_genotypes = pd.read_csv(load_filename + '_cpu_center.csv'.format(str(device)))
   #print(micro_genotypes) 
   sampled_architecture = macro_network.sample_mcts_architecture(dataset_name, NUM_SAMPLE, 
     micro_genotypes, init_channels, layers, n_family, auxiliary, drop_path_prob)
@@ -88,7 +88,7 @@ if __name__ == '__main__':
   dataset_name = 'cifar10'
   num_classes = 10
   filepath = "~/data/" + dataset_name
-  device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+  device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
 
   print("Load Data from: {}".format(filepath))
   CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
