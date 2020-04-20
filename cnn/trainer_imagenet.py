@@ -132,15 +132,6 @@ async def async_train(device, model_architectures, n_family, sched, path):
 
 def get_dist_data_loaders(batch_size, workers):
     print("==> Preparing data..")
-    transforms_train = transforms.Compose(
-        [
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ]
-    )
-
     # Data loading code
     traindir = os.path.join(args.data, "train")
     valdir = os.path.join(args.data, "val")
@@ -276,7 +267,8 @@ def train_heterogenous_network_imagenet(config):
         if acc > best_acc:
             best_acc = acc
             torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
-
+    logfile.write("[Tio] acc {}".format(best_acc))
+    logfile.flush()
     logfile.close()
 
 

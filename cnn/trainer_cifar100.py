@@ -196,7 +196,8 @@ def train_heterogenous_network_cifar(config):
         if acc > best_acc:
             best_acc = acc
             torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
-
+    logfile.write("[Tio] acc {}".format(best_acc))
+    logfile.flush()
     logfile.close()
 
 
