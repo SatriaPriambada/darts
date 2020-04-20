@@ -25,6 +25,7 @@ from ray.tune import track
 
 import torch.distributed as dist
 import torch.multiprocessing as mp
+from torch.utils.data import DataLoader, Dataset
 import torch.utils.data.distributed
 
 import matplotlib.pyplot as plt
@@ -278,7 +279,7 @@ def get_dist_data_loaders(batch_size, workers):
     # Define the training set using the table train_df and using our defined transitions (train_transform)
     training_set = HAM10000(df_train, transform=train_transform)
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-    train_loader = torch.utils.data.DataLoader(
+    train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
         shuffle=(train_sampler is None),
@@ -289,7 +290,7 @@ def get_dist_data_loaders(batch_size, workers):
 
     # Same for the validation set:
     validation_set = HAM10000(df_val, transform=train_transform)
-    test_loader = torch.utils.data.DataLoader(
+    test_loader = DataLoader(
         validation_set,
         batch_size=batch_size,
         shuffle=False,
