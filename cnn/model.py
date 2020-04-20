@@ -410,6 +410,8 @@ class HeterogenousNetworkImageNet(nn.Module):
         logfile.write("last cprev: {}".format(C_prev))
         if self._layers < 10:
             C_prev *= 16
+        elif self._layers < 15:
+            C_prev *= 8
         elif self._layers < 20:
             C_prev *= 4
         self.classifier = nn.Linear(C_prev, num_classes)
