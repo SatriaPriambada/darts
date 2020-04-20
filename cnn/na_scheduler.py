@@ -40,15 +40,17 @@ class NAScheduler(FIFOScheduler):
             halving rate, specified by the reduction factor.
     """
 
-    def __init__(self,
-                 time_attr="training_iteration",
-                 reward_attr=None,
-                 metric="episode_reward_mean",
-                 mode="max",
-                 max_t=100,
-                 grace_period=1,
-                 reduction_factor=4,
-                 brackets=1):
+    def __init__(
+        self,
+        time_attr="training_iteration",
+        reward_attr=None,
+        metric="episode_reward_mean",
+        mode="max",
+        max_t=100,
+        grace_period=1,
+        reduction_factor=4,
+        brackets=1,
+    ):
         assert max_t > 0, "Max (time_attr) not valid!"
         assert max_t >= grace_period, "grace_period must be <= max_t!"
         assert grace_period > 0, "grace_period must be positive!"
@@ -62,7 +64,8 @@ class NAScheduler(FIFOScheduler):
             logger.warning(
                 "`reward_attr` in NAScheduler is deprecated and will be removed in a future "
                 "version of Tune. "
-                "Setting `metric={}` and `mode=max`.".format(reward_attr))
+                "Setting `metric={}` and `mode=max`.".format(reward_attr)
+            )
 
         FIFOScheduler.__init__(self)
         self._reduction_factor = reduction_factor
@@ -72,28 +75,27 @@ class NAScheduler(FIFOScheduler):
 
         # Tracks state for new trial add
         self._brackets = [
-            _Bracket(grace_period, max_t, reduction_factor, s)
-            for s in range(brackets)
+            _Bracket(grace_period, max_t, reduction_factor, s) for s in range(brackets)
         ]
         self._counter = 0  # for
         self._num_stopped = 0
         self._metric = metric
         if mode == "max":
-            self._metric_op = 1.
+            self._metric_op = 1.0
         elif mode == "min":
-            self._metric_op = -1.
+            self._metric_op = -1.0
         self._time_attr = time_attr
 
     def on_trial_add(self, trial_runner, trial):
-        #logger.warning("[Tio]NASched on_trial_add.")
+        # logger.warning("[Tio]NASched on_trial_add.")
         sizes = np.array([len(b._rungs) for b in self._brackets])
-        probs = np.e**(sizes - sizes.max())
+        probs = np.e ** (sizes - sizes.max())
         normalized = probs / probs.sum()
         idx = np.random.choice(len(self._brackets), p=normalized)
         self._trial_info[trial.trial_id] = self._brackets[idx]
 
     def on_trial_result(self, trial_runner, trial, result):
-        #logger.warning("[Tio]NASched on_trial_result.")
+        # logger.warning("[Tio]NASched on_trial_result.")
         action = TrialScheduler.CONTINUE
         if self._time_attr not in result or self._metric not in result:
             return action
@@ -101,27 +103,29 @@ class NAScheduler(FIFOScheduler):
             action = TrialScheduler.STOP
         else:
             bracket = self._trial_info[trial.trial_id]
-            action = bracket.on_result(trial, result[self._time_attr],
-                                       self._metric_op * result[self._metric])
-        
+            action = bracket.on_result(
+                trial, result[self._time_attr], self._metric_op * result[self._metric]
+            )
+
         if action == TrialScheduler.STOP:
-            #print("[Tio]NASched on_trial_result: STOP trial: {}".format(trial))
-            #print("[Tio]STOP trial info: {}".format(self._trial_info[trial.trial_id]))
+            # print("[Tio]NASched on_trial_result: STOP trial: {}".format(trial))
+            # print("[Tio]STOP trial info: {}".format(self._trial_info[trial.trial_id]))
 
             self._num_stopped += 1
         return action
 
     def on_trial_complete(self, trial_runner, trial, result):
-        #logger.warning("[Tio]NASched on_trial_complete.")
+        # logger.warning("[Tio]NASched on_trial_complete.")
         if self._time_attr not in result or self._metric not in result:
             return
         bracket = self._trial_info[trial.trial_id]
-        bracket.on_result(trial, result[self._time_attr],
-                          self._metric_op * result[self._metric])
+        bracket.on_result(
+            trial, result[self._time_attr], self._metric_op * result[self._metric]
+        )
         del self._trial_info[trial.trial_id]
 
     def on_trial_remove(self, trial_runner, trial):
-        #logger.warning("[Tio]NASched on_trial_remove.")
+        # logger.warning("[Tio]NASched on_trial_remove.")
         del self._trial_info[trial.trial_id]
 
     def debug_string(self):
@@ -130,7 +134,7 @@ class NAScheduler(FIFOScheduler):
         return out
 
 
-class _Bracket():
+class _Bracket:
     """Bookkeeping system to track the cutoffs.
 
     Rungs are created in reversed order so that we can more easily find
@@ -148,17 +152,18 @@ class _Bracket():
     def __init__(self, min_t, max_t, reduction_factor, s):
         self.rf = reduction_factor
         MAX_RUNGS = int(np.log(max_t / min_t) / np.log(self.rf) - s + 1)
-        self._rungs = [(min_t * self.rf**(k + s), {})
-                       for k in reversed(range(MAX_RUNGS))]
+        self._rungs = [
+            (min_t * self.rf ** (k + s), {}) for k in reversed(range(MAX_RUNGS))
+        ]
 
     def cutoff(self, recorded):
         if not recorded:
             return None
-        #print("[Tio] bracket_cutoff : {}".format(np.percentile(list(recorded.values()), (1 - 1 / self.rf) * 100)))
+        # print("[Tio] bracket_cutoff : {}".format(np.percentile(list(recorded.values()), (1 - 1 / self.rf) * 100)))
         return 0
 
     def on_result(self, trial, cur_iter, cur_rew):
-        #logger.warning("[Tio]NASched bracket on_result.")
+        # logger.warning("[Tio]NASched bracket on_result.")
         action = TrialScheduler.CONTINUE
         for milestone, recorded in self._rungs:
             if cur_iter < milestone or trial.trial_id in recorded:
@@ -168,23 +173,27 @@ class _Bracket():
                 if cutoff is not None and cur_rew < cutoff:
                     action = TrialScheduler.STOP
                 if cur_rew is None:
-                    logger.warning("Reward attribute is None! Consider"
-                                   " reporting using a different field.")
+                    logger.warning(
+                        "Reward attribute is None! Consider"
+                        " reporting using a different field."
+                    )
                 else:
                     recorded[trial.trial_id] = cur_rew
                 break
         return action
 
     def debug_str(self):
-        iters = " | ".join([
-            "Iter {:.3f}: {}".format(milestone, self.cutoff(recorded))
-            for milestone, recorded in self._rungs
-        ])
+        iters = " | ".join(
+            [
+                "Iter {:.3f}: {}".format(milestone, self.cutoff(recorded))
+                for milestone, recorded in self._rungs
+            ]
+        )
         return "Bracket: " + iters
 
+
 if __name__ == "__main__":
-    sched = NAScheduler(
-        grace_period=1, max_t=10, reduction_factor=2)
+    sched = NAScheduler(grace_period=1, max_t=10, reduction_factor=2)
     print(sched.debug_string())
     bracket = sched._brackets[0]
     print(bracket.cutoff({str(i): i for i in range(20)}))
