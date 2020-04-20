@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import glob
 import numpy as np
 import torch
 import utils
@@ -13,6 +12,9 @@ import torch.utils
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torch.backends.cudnn as cudnn
+from glob import glob
+from sklearn.model_selection import train_test_split
+from PIL import Image
 
 from torch.autograd import Variable
 import torch
@@ -158,7 +160,7 @@ def get_dist_data_loaders(batch_size, workers):
     np.random.seed(10)
     torch.manual_seed(10)
     torch.cuda.manual_seed(10)
-    data_dir = "~/Downloads/skin-cancer-mnist-ham10000/"
+    data_dir = "/nethome/spriambada3/data/skin-cancer-mnist-ham10000/"
     all_image_path = glob(os.path.join(data_dir, "*", "*.jpg"))
     imageid_path_dict = {
         os.path.splitext(os.path.basename(x))[0]: x for x in all_image_path
@@ -255,7 +257,7 @@ def get_dist_data_loaders(batch_size, workers):
     df_train = df_train.reset_index()
     df_val = df_val.reset_index()
     # Data loading code
-    normalize = transforms.Normalize(mean=norm_mean, std=norm_stds)
+    normalize = transforms.Normalize(mean=norm_mean, std=norm_std)
     train_transform = transforms.Compose(
         [
             transforms.Resize((INPUT_SIZE, INPUT_SIZE)),
@@ -277,10 +279,10 @@ def get_dist_data_loaders(batch_size, workers):
     )
 
     # Define the training set using the table train_df and using our defined transitions (train_transform)
-    training_set = HAM10000(df_train, transform=train_transform)
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    train_data = HAM10000(df_train, transform=train_transform)
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
     train_loader = DataLoader(
-        train_dataset,
+        train_data,
         batch_size=batch_size,
         shuffle=(train_sampler is None),
         num_workers=workers,
@@ -289,9 +291,9 @@ def get_dist_data_loaders(batch_size, workers):
     )
 
     # Same for the validation set:
-    validation_set = HAM10000(df_val, transform=train_transform)
+    valid_data = HAM10000(df_val, transform=train_transform)
     test_loader = DataLoader(
-        validation_set,
+        valid_data,
         batch_size=batch_size,
         shuffle=False,
         num_workers=workers,
