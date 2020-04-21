@@ -43,9 +43,8 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
 OPORTUNITY_GAP_ARCHITECTURE = (
-    "generated_cifar_macro_mcts_mcts_architecture_cpu_layers.csv"
+    "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 )
 # Change these values if you want the training to run quicker or slower.
 IMAGENET_CLASSES = 1000
@@ -77,7 +76,7 @@ async def per_res_train(device, device_id, hyperparameter_space, sched, path):
         config=hyperparameter_space,
         resources_per_trial={"gpu": ngpus_per_node},
         verbose=1,
-        name="train_heterogenous_network_imagenet",  # This is used to specify the logging directory.
+        name="train_mcts_imagenet",  # This is used to specify the logging directory.
     )
 
     print("Finishing latency strata: {}".format(device_id))
@@ -379,7 +378,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=128, help="")
     parser.add_argument("--workers", type=int, default=4, help="")
     parser.add_argument(
-        "--gpu_devices", type=int, nargs="+", default=[5, 6, 7], help=""
+        "--gpu_devices", type=int, nargs="+", default=[0, 1, 2, 3, 4, 5, 6, 7], help=""
     )
 
     parser.add_argument(

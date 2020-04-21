@@ -55,7 +55,7 @@ async def per_res_train(device, device_id, hyperparameter_space, sched, path):
         config=hyperparameter_space,
         resources_per_trial={"gpu": 1},
         verbose=1,
-        name="train_mcts_hetero_cifar",  # This is used to specify the logging directory.
+        name="train_mcts_cifar_13_04_2020",  # This is used to specify the logging directory.
     )
 
     print("Finishing latency strata: {}".format(device_id))
@@ -91,7 +91,7 @@ async def async_train(device, model_architectures, n_family, sched, path):
 
     for device_id in devices:
         hyperparameter_space = {
-            "model_name": "train_mnist",
+            "model_name": "train_cifar",
             "architecture": tune.grid_search(arr_of_models[device_id]),
             "lr": tune.grid_search([args.learning_rate]),
             "momentum": tune.grid_search([args.momentum]),
