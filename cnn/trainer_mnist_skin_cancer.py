@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import glob
 import numpy as np
 import torch
 import utils
@@ -13,6 +12,9 @@ import torch.utils
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torch.backends.cudnn as cudnn
+from glob import glob
+from sklearn.model_selection import train_test_split
+from PIL import Image
 
 from torch.autograd import Variable
 import torch
@@ -25,6 +27,7 @@ from ray.tune import track
 
 import torch.distributed as dist
 import torch.multiprocessing as mp
+from torch.utils.data import DataLoader, Dataset
 import torch.utils.data.distributed
 
 import matplotlib.pyplot as plt
@@ -43,13 +46,34 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = (
-    "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
-)
+os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
+OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
-IMAGENET_CLASSES = 1000
+SKIN_CANCER_CLASSES = 7
+INPUT_SIZE = 224
+BATCH_SIZE = 128
 ngpus_per_node = 1
 best_acc1 = 0
+
+
+# Define a pytorch dataloader for this dataset
+class HAM10000(Dataset):
+    def __init__(self, df, transform=None):
+        self.df = df
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, index):
+        # Load data and get label
+        X = Image.open(self.df["path"][index])
+        y = torch.tensor(int(self.df["cell_type_idx"][index]))
+
+        if self.transform:
+            X = self.transform(X)
+
+        return X, y
 
 
 class CrossEntropyLabelSmooth(nn.Module):
@@ -71,12 +95,12 @@ async def per_res_train(device, device_id, hyperparameter_space, sched, path):
     print("Running for latency strata: {}".format(device_id))
 
     analysis = tune.run(
-        train_heterogenous_network_imagenet,
+        train_mnist_skin_cancer,
         scheduler=sched,
         config=hyperparameter_space,
         resources_per_trial={"gpu": ngpus_per_node},
         verbose=1,
-        name="train_mcts_imagenet",  # This is used to specify the logging directory.
+        name="train_mnist_skin_cancer",  # This is used to specify the logging directory.
     )
 
     print("Finishing latency strata: {}".format(device_id))
@@ -86,12 +110,12 @@ async def per_res_train(device, device_id, hyperparameter_space, sched, path):
     plt.xlabel("epoch")
     plt.ylabel("Test Accuracy")
     plt.savefig(
-        path + "/train_imagenet_{}_{}.pdf".format(device, device_id),
+        path + "/train_mnist_skin_cancer_{}_{}.pdf".format(device, device_id),
         ext="pdf",
         bbox_inches="tight",
     )
     plt.savefig(
-        path + "/train_imagenet_{}_{}.png".format(device, device_id),
+        path + "/train_mnist_skin_cancer_{}_{}.png".format(device, device_id),
         ext="png",
         bbox_inches="tight",
     )
@@ -131,32 +155,134 @@ async def async_train(device, model_architectures, n_family, sched, path):
 
 def get_dist_data_loaders(batch_size, workers):
     print("==> Preparing data..")
+
+    # to make the results are reproducible
+    np.random.seed(10)
+    torch.manual_seed(10)
+    torch.cuda.manual_seed(10)
+    data_dir = "/nethome/spriambada3/data/skin-cancer-mnist-ham10000/"
+    all_image_path = glob(os.path.join(data_dir, "*", "*.jpg"))
+    imageid_path_dict = {
+        os.path.splitext(os.path.basename(x))[0]: x for x in all_image_path
+    }
+    lesion_type_dict = {
+        "nv": "Melanocytic nevi",
+        "mel": "dermatofibroma",
+        "bkl": "Benign keratosis-like lesions ",
+        "bcc": "Basal cell carcinoma",
+        "akiec": "Actinic keratoses",
+        "vasc": "Vascular lesions",
+        "df": "Dermatofibroma",
+    }
+
+    norm_mean = [0.763038, 0.54564667, 0.57004464]
+    norm_std = [0.14092727, 0.15261286, 0.1699712]
+
+    df_original = pd.read_csv(os.path.join(data_dir, "HAM10000_metadata.csv"))
+    df_original["path"] = df_original["image_id"].map(imageid_path_dict.get)
+    df_original["cell_type"] = df_original["dx"].map(lesion_type_dict.get)
+    df_original["cell_type_idx"] = pd.Categorical(df_original["cell_type"]).codes
+    print(df_original.head())
+
+    # this will tell us how many images are associated with each lesion_id
+    df_undup = df_original.groupby("lesion_id").count()
+    # now we filter out lesion_id's that have only one image associated with it
+    df_undup = df_undup[df_undup["image_id"] == 1]
+    df_undup.reset_index(inplace=True)
+    df_undup.head()
+
+    # here we identify lesion_id's that have duplicate images and those that have only one image.
+    def get_duplicates(x):
+        unique_list = list(df_undup["lesion_id"])
+        if x in unique_list:
+            return "unduplicated"
+        else:
+            return "duplicated"
+
+    # create a new colum that is a copy of the lesion_id column
+    df_original["duplicates"] = df_original["lesion_id"]
+    # apply the function to this new column
+    df_original["duplicates"] = df_original["duplicates"].apply(get_duplicates)
+    df_original.head()
+
+    print(df_original["duplicates"].value_counts())
+
+    # now we filter out images that don't have duplicates
+    df_undup = df_original[df_original["duplicates"] == "unduplicated"]
+    df_undup.shape
+
+    # now we create a val set using df because we are sure that none of these images have augmented duplicates in the train set
+    y = df_undup["cell_type_idx"]
+    _, df_val = train_test_split(df_undup, test_size=0.2, random_state=101, stratify=y)
+    df_val.shape
+
+    df_val["cell_type_idx"].value_counts()
+
+    # This set will be df_original excluding all rows that are in the val set
+    # This function identifies if an image is part of the train or val set.
+    def get_val_rows(x):
+        # create a list of all the lesion_id's in the val set
+        val_list = list(df_val["image_id"])
+        if str(x) in val_list:
+            return "val"
+        else:
+            return "train"
+
+    # identify train and val rows
+    # create a new colum that is a copy of the image_id column
+    df_original["train_or_val"] = df_original["image_id"]
+    # apply the function to this new column
+    df_original["train_or_val"] = df_original["train_or_val"].apply(get_val_rows)
+    # filter out train rows
+    df_train = df_original[df_original["train_or_val"] == "train"]
+    print(len(df_train))
+    print(len(df_val))
+
+    print(df_train["cell_type_idx"].value_counts())
+    print(df_val["cell_type"].value_counts())
+
+    # Copy fewer class to balance the number of 7 classes
+    data_aug_rate = [15, 10, 5, 50, 0, 40, 5]
+    for i in range(7):
+        if data_aug_rate[i]:
+            df_train = df_train.append(
+                [df_train.loc[df_train["cell_type_idx"] == i, :]]
+                * (data_aug_rate[i] - 1),
+                ignore_index=True,
+            )
+    df_train["cell_type"].value_counts()
+
+    # # We can split the test set again in a validation set and a true test set:
+    # df_val, df_test = train_test_split(df_val, test_size=0.5)
+    df_train = df_train.reset_index()
+    df_val = df_val.reset_index()
     # Data loading code
-    traindir = os.path.join(args.data, "train")
-    valdir = os.path.join(args.data, "val")
-    normalize = transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+    normalize = transforms.Normalize(mean=norm_mean, std=norm_std)
+    train_transform = transforms.Compose(
+        [
+            transforms.Resize((INPUT_SIZE, INPUT_SIZE)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.RandomRotation(20),
+            transforms.ColorJitter(brightness=0.1, contrast=0.1, hue=0.1),
+            transforms.ToTensor(),
+            transforms.Normalize(norm_mean, norm_std),
+        ]
+    )
+    # define the transformation of the val images.
+    val_transform = transforms.Compose(
+        [
+            transforms.Resize((INPUT_SIZE, INPUT_SIZE)),
+            transforms.ToTensor(),
+            transforms.Normalize(norm_mean, norm_std),
+        ]
     )
 
-    train_dataset = datasets.ImageFolder(
-        traindir,
-        transforms.Compose(
-            [
-                transforms.RandomResizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(
-                    brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2
-                ),
-                transforms.ToTensor(),
-                normalize,
-            ]
-        ),
-    )
-
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
+    # Define the training set using the table train_df and using our defined transitions (train_transform)
+    train_data = HAM10000(df_train, transform=train_transform)
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
+    train_loader = DataLoader(
+        train_data,
         batch_size=batch_size,
         shuffle=(train_sampler is None),
         num_workers=workers,
@@ -164,18 +290,10 @@ def get_dist_data_loaders(batch_size, workers):
         sampler=train_sampler,
     )
 
-    test_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(
-            valdir,
-            transforms.Compose(
-                [
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
-                    transforms.ToTensor(),
-                    normalize,
-                ]
-            ),
-        ),
+    # Same for the validation set:
+    valid_data = HAM10000(df_val, transform=train_transform)
+    test_loader = DataLoader(
+        valid_data,
         batch_size=batch_size,
         shuffle=False,
         num_workers=workers,
@@ -185,7 +303,7 @@ def get_dist_data_loaders(batch_size, workers):
     return train_loader, test_loader
 
 
-def train_heterogenous_network_imagenet(config):
+def train_mnist_skin_cancer(config):
     #    ngpus_per_node = torch.cuda.device_count()
 
     world_size = ngpus_per_node * args.world_size
@@ -216,7 +334,7 @@ def train_heterogenous_network_imagenet(config):
     criterion = criterion.cuda()
 
     label_smooth = 0.1
-    criterion_smooth = CrossEntropyLabelSmooth(IMAGENET_CLASSES, label_smooth)
+    criterion_smooth = CrossEntropyLabelSmooth(SKIN_CANCER_CLASSES, label_smooth)
     criterion_smooth = criterion_smooth.cuda()
     valid_port = args.dist_port + int(config["architecture"]["id"])
     full_url = args.dist_url + ":" + str(valid_port)
@@ -266,6 +384,7 @@ def train_heterogenous_network_imagenet(config):
         if acc > best_acc:
             best_acc = acc
             torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
+
     logfile.write("[Tio] acc {}".format(best_acc))
     logfile.flush()
     logfile.close()
@@ -351,12 +470,6 @@ def torch_1_v_4_test(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="imagenet distributed training models")
-    #    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-    #                        choices=model_names,
-    #                        help='model architecture: ' +
-    #                            ' | '.join(model_names) +
-    #                            ' (default: resnet18)')
-
     parser.add_argument(
         "--learning_rate", type=float, default=0.025, help="init learning rate"
     )
@@ -364,13 +477,13 @@ if __name__ == "__main__":
     parser.add_argument("--weight_decay", type=float, default=3e-4, help="weight decay")
 
     parser.add_argument(
-        "--final_epochs", default=90, type=int, help="number of total epochs to run"
+        "--final_epochs", default=120, type=int, help="number of total epochs to run"
     )
 
     parser.add_argument("--batch_size", type=int, default=128, help="")
     parser.add_argument("--workers", type=int, default=4, help="")
     parser.add_argument(
-        "--gpu_devices", type=int, nargs="+", default=[0, 1, 2, 3, 4, 5, 6, 7], help=""
+        "--gpu_devices", type=int, nargs="+", default=[5, 6, 7], help=""
     )
 
     parser.add_argument(
@@ -442,7 +555,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    num_classes = IMAGENET_CLASSES
+    num_classes = SKIN_CANCER_CLASSES
     ray.shutdown()
     ray.init(log_to_driver=False)
     df_op_gap = pd.read_csv(OPORTUNITY_GAP_ARCHITECTURE)

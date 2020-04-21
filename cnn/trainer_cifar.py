@@ -197,7 +197,8 @@ def train_heterogenous_network_cifar(config):
         if acc > best_acc:
             best_acc = acc
             torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
-
+    logfile.write("[Tio] acc {}".format(best_acc))
+    logfile.flush()
     logfile.close()
 
 
@@ -384,4 +385,3 @@ if __name__ == "__main__":
     loop.run_until_complete(future)
     print(f"Execution time: { time.time() - _start }")
     loop.close()
-

@@ -10,11 +10,11 @@ import argparse
 import torch.nn as nn
 import genotypes
 import torch.utils
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
+import torchvision.datasets as dset
 import torch.backends.cudnn as cudnn
 
 from torch.autograd import Variable
+from model import NetworkCIFAR as Network
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
@@ -23,10 +23,6 @@ import ray
 from ray import tune
 from ray.tune import track
 
-import torch.distributed as dist
-import torch.multiprocessing as mp
-import torch.utils.data.distributed
-
 import matplotlib.pyplot as plt
 import matplotlib.style as style
 
@@ -34,8 +30,9 @@ style.use("ggplot")
 from na_scheduler import NAScheduler
 from ray.tune.schedulers import AsyncHyperBandScheduler
 
-from model import HeterogenousNetworkImageNet
+from model import HeterogenousNetworkCIFAR
 
+dset.CIFAR100("~/data", train=True, download=True)
 import asyncio
 import sys
 import time
@@ -43,40 +40,23 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = (
-    "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
-)
+os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
+
+OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
-IMAGENET_CLASSES = 1000
-ngpus_per_node = 1
-best_acc1 = 0
-
-
-class CrossEntropyLabelSmooth(nn.Module):
-    def __init__(self, num_classes, epsilon):
-        super(CrossEntropyLabelSmooth, self).__init__()
-        self.num_classes = num_classes
-        self.epsilon = epsilon
-        self.logsoftmax = nn.LogSoftmax(dim=1)
-
-    def forward(self, inputs, targets):
-        log_probs = self.logsoftmax(inputs)
-        targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1), 1)
-        targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
-        loss = (-targets * log_probs).mean(0).sum()
-        return loss
+EPOCH_SIZE = 32
 
 
 async def per_res_train(device, device_id, hyperparameter_space, sched, path):
     print("Running for latency strata: {}".format(device_id))
 
     analysis = tune.run(
-        train_heterogenous_network_imagenet,
+        train_heterogenous_network_cifar,
         scheduler=sched,
         config=hyperparameter_space,
-        resources_per_trial={"gpu": ngpus_per_node},
+        resources_per_trial={"gpu": 1},
         verbose=1,
-        name="train_mcts_imagenet",  # This is used to specify the logging directory.
+        name="train_mcts_cifar100",  # This is used to specify the logging directory.
     )
 
     print("Finishing latency strata: {}".format(device_id))
@@ -86,12 +66,12 @@ async def per_res_train(device, device_id, hyperparameter_space, sched, path):
     plt.xlabel("epoch")
     plt.ylabel("Test Accuracy")
     plt.savefig(
-        path + "/train_imagenet_{}_{}.pdf".format(device, device_id),
+        path + "/train_cifar100_{}_{}.pdf".format(device, device_id),
         ext="pdf",
         bbox_inches="tight",
     )
     plt.savefig(
-        path + "/train_imagenet_{}_{}.png".format(device, device_id),
+        path + "/train_cifar100_{}_{}.png".format(device, device_id),
         ext="png",
         bbox_inches="tight",
     )
@@ -104,20 +84,16 @@ def chunks(lst, n):
 
 
 async def async_train(device, model_architectures, n_family, sched, path):
-    fam_member = int(len(model_architectures) / n_family)
-    if fam_member == 0:
-        fam_member = 1
-    # print("possible family candidates per strata", fam_member)
-    arr_of_models = list(chunks(model_architectures, fam_member))
-    # print(arr_of_models)
-    # print("len arr ", len(arr_of_models))
 
+    arr_of_models = list(chunks(model_architectures, len(model_architectures)))
+    print(arr_of_models)
+    devices = [i for i in range(n_family)]
     tasks = []
 
-    for device_id, arr_model in enumerate(arr_of_models):
+    for device_id in devices:
         hyperparameter_space = {
-            "model_name": "train_mnist",
-            "architecture": tune.grid_search(arr_model),
+            "model_name": "train_cifar100",
+            "architecture": tune.grid_search(arr_of_models[device_id]),
             "lr": tune.grid_search([args.learning_rate]),
             "momentum": tune.grid_search([args.momentum]),
         }
@@ -129,71 +105,46 @@ async def async_train(device, model_architectures, n_family, sched, path):
     await asyncio.gather(*tasks)
 
 
-def get_dist_data_loaders(batch_size, workers):
-    print("==> Preparing data..")
-    # Data loading code
-    traindir = os.path.join(args.data, "train")
-    valdir = os.path.join(args.data, "val")
-    normalize = transforms.Normalize(
-        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-    )
+CIFAR_CLASSES = 100
 
-    train_dataset = datasets.ImageFolder(
-        traindir,
-        transforms.Compose(
-            [
-                transforms.RandomResizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(
-                    brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2
-                ),
-                transforms.ToTensor(),
-                normalize,
-            ]
-        ),
-    )
 
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+def get_data_loaders(batch_size, workers, args):
+    train_transform, valid_transform = utils._data_transforms_cifar100(args)
+    train_data = dset.CIFAR100(
+        root="~/data", train=True, download=True, transform=train_transform
+    )
+    valid_data = dset.CIFAR100(
+        root="~/data", train=False, download=True, transform=valid_transform
+    )
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset,
+        train_data,
         batch_size=batch_size,
-        shuffle=(train_sampler is None),
-        num_workers=workers,
+        shuffle=True,
         pin_memory=True,
-        sampler=train_sampler,
+        num_workers=workers,
     )
 
     test_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(
-            valdir,
-            transforms.Compose(
-                [
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
-                    transforms.ToTensor(),
-                    normalize,
-                ]
-            ),
-        ),
+        valid_data,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=workers,
         pin_memory=True,
+        num_workers=workers,
     )
-
     return train_loader, test_loader
 
 
-def train_heterogenous_network_imagenet(config):
-    #    ngpus_per_node = torch.cuda.device_count()
-
-    world_size = ngpus_per_node * args.world_size
-
+def train_heterogenous_network_cifar(config):
     model_name = config["architecture"]["name"]
 
+    logfile = open("log.txt", "w")
+    logfile.write(
+        "[Tio] log for architecture id {}".format(config["architecture"]["id"])
+    )
+    # logfile.write("[Tio] training model {}".format(model_name))
     selected_layers = model_name.split(";")
-    model = HeterogenousNetworkImageNet(
+    model = HeterogenousNetworkCIFAR(
         config["architecture"]["init_channels"],
         config["architecture"]["num_classes"],
         config["architecture"]["layers"],
@@ -201,47 +152,24 @@ def train_heterogenous_network_imagenet(config):
         selected_layers,
     )
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
+    workers = 4
+    batch_size = EPOCH_SIZE
+    
+    train_loader, test_loader = get_data_loaders(batch_size, workers, args)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = model.to(device)
     optimizer = optim.SGD(
         model.parameters(), lr=config["lr"], momentum=config["momentum"]
     )
-
-    gamma = 0.97
-    decay_period = 1
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, decay_period, gamma=gamma)
-
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, float(args.epochs)
+    )
+    best_acc = 0
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.CrossEntropyLoss()
     criterion = criterion.cuda()
-
-    label_smooth = 0.1
-    criterion_smooth = CrossEntropyLabelSmooth(IMAGENET_CLASSES, label_smooth)
-    criterion_smooth = criterion_smooth.cuda()
-    valid_port = args.dist_port + int(config["architecture"]["id"])
-    full_url = args.dist_url + ":" + str(valid_port)
-    dist.init_process_group(
-        backend=args.dist_backend,
-        init_method=full_url,
-        rank=args.rank,
-        world_size=world_size,
-    )
-    model = torch.nn.parallel.DistributedDataParallel(
-        model, find_unused_parameters=True
-    )
-    # Train model to get accuracy.
-
-    logfile = open("log.txt", "w")
-    logfile.write(
-        "[Tio] log for architecture id {}".format(config["architecture"]["id"])
-    )
-    # logfile.write("[Tio] training model {}".format(model_name))
-    train_loader, test_loader = get_dist_data_loaders(args.batch_size, args.workers)
-
-    best_acc = 0
-    for epoch in range(args.final_epochs):
+    for epoch in range(50):
         scheduler.step()
-        model.drop_path_prob = args.drop_path_prob * epoch / args.final_epochs
+        model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
         # Train model to get accuracy.
         logfile.write("start training epoch {} \n".format(epoch))
         logfile.flush()
@@ -249,7 +177,7 @@ def train_heterogenous_network_imagenet(config):
             epoch,
             model,
             optimizer,
-            criterion_smooth,
+            criterion,
             train_loader,
             logfile,
             device,
@@ -288,12 +216,17 @@ def torch_1_v_4_train(
     top5 = utils.AverageMeter()
 
     for batch_idx, (data, target) in enumerate(train_loader):
+        logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
+        logfile.flush()
 
         data = Variable(data).to(device)
         target = Variable(target).to(device)
-
+        logfile.write("data: {} target: {}\n".format(data, target))
+        logfile.flush()
         optimizer.zero_grad()
         logits, logits_aux = model(data)
+        logfile.write("logits: {} logits_aux: {}\n".format(logits, logits_aux))
+        logfile.flush()
         loss = criterion(logits, target)
         if auxiliary:
             loss_aux = criterion(logits_aux, target)
@@ -302,7 +235,7 @@ def torch_1_v_4_train(
         logfile.write("loss {} \n".format(loss))
         logfile.flush()
         grad_clip = 5
-        nn.utils.clip_grad_norm(model.parameters(), grad_clip)
+        nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
 
         prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
@@ -311,7 +244,7 @@ def torch_1_v_4_train(
         top1.update(prec1.item(), n)
         top5.update(prec5.item(), n)
         logfile.write(
-            "train {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+            "train %03d %e %f %f".format(batch_idx, objs.avg, top1.avg, top5.avg)
         )
         logfile.flush()
 
@@ -343,66 +276,30 @@ def torch_1_v_4_test(
             top5.update(prec5.item(), n)
 
             logfile.write(
-                "valid {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+                "valid %03d %e %f %f".format(batch_idx, objs.avg, top1.avg, top5.avg)
             )
             logfile.flush()
     return top1.avg, objs.avg
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="imagenet distributed training models")
-    #    parser.add_argument('-a', '--arch', metavar='ARCH', default='resnet18',
-    #                        choices=model_names,
-    #                        help='model architecture: ' +
-    #                            ' | '.join(model_names) +
-    #                            ' (default: resnet18)')
-
+    parser = argparse.ArgumentParser("trainer_cifar.py")
+    parser.add_argument(
+        "--data", type=str, default="../data", help="location of the data corpus"
+    )
+    parser.add_argument("--batch_size", type=int, default=96, help="batch size")
     parser.add_argument(
         "--learning_rate", type=float, default=0.025, help="init learning rate"
     )
     parser.add_argument("--momentum", type=float, default=0.9, help="momentum")
     parser.add_argument("--weight_decay", type=float, default=3e-4, help="weight decay")
-
-    parser.add_argument(
-        "--final_epochs", default=90, type=int, help="number of total epochs to run"
-    )
-
-    parser.add_argument("--batch_size", type=int, default=128, help="")
-    parser.add_argument("--workers", type=int, default=4, help="")
-    parser.add_argument(
-        "--gpu_devices", type=int, nargs="+", default=[0, 1, 2, 3, 4, 5, 6, 7], help=""
-    )
-
-    parser.add_argument(
-        "--data",
-        default="/srv/data/datasets/ImageNet",
-        type=str,
-        help="path to ImageNet data",
-    )
-    parser.add_argument(
-        "-print",
-        "--print-freq",
-        default=1,
-        type=int,
-        metavar="N",
-        help="print frequency (default: 10)",
-    )
-
-    parser.add_argument("--dist-url", default="tcp://127.0.0.1", type=str, help="")
-    parser.add_argument("--dist-port", default=3456, type=int, help="")
-    parser.add_argument("--dist-backend", default="nccl", type=str, help="")
-    parser.add_argument("--rank", default=0, type=int, help="")
-    parser.add_argument("--world_size", default=1, type=int, help="")
-    parser.add_argument("--distributed", action="store_true", help="")
-    args = parser.parse_args()
-
-    gpu_devices = ",".join([str(id) for id in args.gpu_devices])
-    os.environ["CUDA_VISIBLE_DEVICES"] = gpu_devices
-
     parser.add_argument(
         "--report_freq", type=float, default=50, help="report frequency"
     )
     parser.add_argument("--gpu", type=int, default=0, help="gpu device id")
+    parser.add_argument(
+        "--epochs", type=int, default=600, help="num of training epochs"
+    )
     parser.add_argument(
         "--init_channels", type=int, default=36, help="num of init channels"
     )
@@ -429,20 +326,25 @@ if __name__ == "__main__":
         "-d",
         "--device",
         type=str,
-        default="cpu-i7-4578U",
+        default="gpu-rtx2080",
         help="device used for profile",
     )
     parser.add_argument(
         "-p", "--path", type=str, default="img", help="path to pdf image results"
     )
-
-    parser.add_argument(
-        "--parallel", action="store_true", default=False, help="data parallelism"
-    )
-
     args = parser.parse_args()
 
-    num_classes = IMAGENET_CLASSES
+    args.save = "eval-{}-{}".format(args.save, time.strftime("%Y%m%d-%H%M%S"))
+    utils.create_exp_dir(args.save, scripts_to_save=glob.glob("*.py"))
+
+    log_format = "%(asctime)s %(message)s"
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO,
+        format=log_format,
+        datefmt="%m/%d %I:%M:%S %p",
+    )
+    num_classes = CIFAR_CLASSES
     ray.shutdown()
     ray.init(log_to_driver=False)
     df_op_gap = pd.read_csv(OPORTUNITY_GAP_ARCHITECTURE)
