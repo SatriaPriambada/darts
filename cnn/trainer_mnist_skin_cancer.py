@@ -326,8 +326,8 @@ def train_mnist_skin_cancer(config):
         model.parameters(), lr=config["lr"], momentum=config["momentum"]
     )
 
-    gamma = 0.97
-    decay_period = 1
+    gamma = 0.10
+    decay_period = 30
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, decay_period, gamma=gamma)
 
     criterion = nn.CrossEntropyLoss()
@@ -471,13 +471,13 @@ def torch_1_v_4_test(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="imagenet distributed training models")
     parser.add_argument(
-        "--learning_rate", type=float, default=0.025, help="init learning rate"
+        "--learning_rate", type=float, default=0.1, help="init learning rate"
     )
     parser.add_argument("--momentum", type=float, default=0.9, help="momentum")
     parser.add_argument("--weight_decay", type=float, default=3e-4, help="weight decay")
 
     parser.add_argument(
-        "--final_epochs", default=120, type=int, help="number of total epochs to run"
+        "--final_epochs", default=1, type=int, help="number of total epochs to run"
     )
 
     parser.add_argument("--batch_size", type=int, default=128, help="")
