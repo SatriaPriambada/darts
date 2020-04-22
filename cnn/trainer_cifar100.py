@@ -40,7 +40,7 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 
 OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
