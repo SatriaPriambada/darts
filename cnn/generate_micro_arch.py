@@ -161,10 +161,12 @@ def kmedioid_grouping(df, nclusters):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--layers", type=int, default=25, help="number of layers")
+    parser.add_argument("-gpuid", "--gpuid", type=int, default=0, help="default gpu id")
+
     args = parser.parse_args()
 
     seed = 0
-    gpuid = 7
+    gpuid = args.gpuid
     init_channels = 36
     layers = args.layers
     auxiliary = False
