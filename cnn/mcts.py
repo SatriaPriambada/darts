@@ -99,6 +99,7 @@ class State:
             self.n_family,
             self.target_latency,
             self.max_layers,
+            self.dataset_name,
             self.config,
         )
 
@@ -109,7 +110,7 @@ class State:
 
     def get_acc_latency(self):
         latencies = []
-        if (self.dataset_name == 'cifar10'){
+        if (self.dataset_name == 'cifar10'):
             model = HeterogenousNetworkCIFAR(
                 self.config["architecture"]["init_channels"],
                 self.config["architecture"]["num_classes"],
@@ -125,7 +126,7 @@ class State:
             mean_lat, latencies = latency_profiler.test_latency(
                 model, dummy_input, self.config["device"]
             )
-        } else if (self.dataset_name == 'imagenet'){
+        elif (self.dataset_name == 'imagenet'):
             model = HeterogenousNetworkImageNet(
                 self.config["architecture"]["init_channels"],
                 self.config["architecture"]["num_classes"],
@@ -141,7 +142,7 @@ class State:
             mean_lat, latencies = latency_profiler.test_latency(
                 model, dummy_input, self.config["device"]
             )
-        }
+        
         
         train_result = {"acc": 0, "lat": latencies[98]}
         print("train_result ", train_result)

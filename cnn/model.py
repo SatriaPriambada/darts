@@ -348,11 +348,14 @@ class HeterogenousNetworkImageNet(nn.Module):
         none_layers_idx = set(
             [i for i in range(len(genotypes)) if genotypes[i] == "none"]
         )
+
         if layers <= len(genotypes):
+            print(layers, ":", len(genotypes))
             valid_layers = layers - len(none_layers_idx)
         else:
+            print(layers, ":" ,len(genotypes), len(none_layers_idx))
             valid_layers = len(genotypes) - len(none_layers_idx)
-        assert valid_layers > 0
+        assert valid_layers >= 0
         self._layers = valid_layers
         self._auxiliary = auxiliary
         self.device = "cuda" if torch.cuda.is_available() else "cpu"

@@ -119,7 +119,7 @@ if __name__ == "__main__":
     valid_transform = transforms.Compose([transforms.ToTensor(), normalize])
     valdir = os.path.join(filepath, "val")
     test_loader = torch.utils.data.DataLoader(
-        datasets.ImageFolder(
+        dset.ImageFolder(
             valdir,
             transforms.Compose(
                 [
