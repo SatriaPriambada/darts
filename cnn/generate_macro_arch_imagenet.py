@@ -35,12 +35,11 @@ logging.basicConfig(
 )
 
 load_filename = "generated_micro_imagenet_center.csv"
-filename = "t1_generated_imagenet_macro_mcts_sim_100"
+filename = "t3_generated_imagenet_macro_mcts_sim_100"
 NFAMILY = 8
 CLASSES = 100
 NUM_SAMPLE = 125
-CLUSTERS = 8
-
+CLUSTER = 14
 
 def generate_macro(
     dataset_name,
@@ -78,6 +77,7 @@ def generate_macro(
         init_channels,
         layers,
         n_family,
+        CLUSTER,
         auxiliary,
         drop_path_prob,
     )

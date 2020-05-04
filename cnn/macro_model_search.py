@@ -271,6 +271,7 @@ class MacroNetwork(nn.Module):
         init_channels,
         max_layers,
         n_family,
+	n_cluster,
         auxiliary,
         drop_path_prob,
     ):
@@ -287,7 +288,7 @@ class MacroNetwork(nn.Module):
             "lr": 0.025,
             "momentum": 0.9,
         }
-
+	
         num_sims = 100
         n_turn = n_family + 2
         target_latency = self.find_target_latency(

@@ -19,6 +19,7 @@ import torchvision.datasets as datasets
 from model import HeterogenousNetworkImageNet
 import pandas as pd
 
+#python cnn/pytorch_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet 
 load_filename = "generated_micro_imagenet_center.csv"
 
 parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
@@ -237,9 +238,9 @@ def main_worker(gpu, ngpus_per_node, args):
         3,
     ]
     micro_genotypes = pd.read_csv(load_filename)
-    selected_genotype = [micro_genotypes.iloc(x, 0) for x in selected_med]
+    selected_genotype = [micro_genotypes.iloc[x, 0] for x in selected_med]
 
-    model = HeterogenousNetworkImageNet(36, 1000, 25, True, selected_genotype,)
+    model = HeterogenousNetworkImageNet(36, 1000, 25, True, selected_genotype)
     model.drop_path_prob = 0.2
 
     if args.distributed:
@@ -255,13 +256,13 @@ def main_worker(gpu, ngpus_per_node, args):
             args.batch_size = int(args.batch_size / ngpus_per_node)
             args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
             model = torch.nn.parallel.DistributedDataParallel(
-                model, device_ids=[args.gpu]
+                model, device_ids=[args.gpu], find_unused_parameters=True
             )
         else:
             model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
             # available GPUs if device_ids are not set
-            model = torch.nn.parallel.DistributedDataParallel(model)
+            model = torch.nn.parallel.DistributedDataParallel(model, find_unused_parameters=True)
     elif args.gpu is not None:
         torch.cuda.set_device(args.gpu)
         model = model.cuda(args.gpu)
@@ -414,8 +415,10 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         target = target.cuda(args.gpu, non_blocking=True)
 
         # compute output
-        output = model(images)
+        output, logits_aux  = model(images)
         loss = criterion(output, target)
+        loss_aux = criterion(logits_aux, target)
+        loss += 0.4 * loss_aux
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
@@ -456,7 +459,7 @@ def validate(val_loader, model, criterion, args):
             target = target.cuda(args.gpu, non_blocking=True)
 
             # compute output
-            output = model(images)
+            output, logits_aux  = model(images)
             loss = criterion(output, target)
 
             # measure accuracy and record loss
