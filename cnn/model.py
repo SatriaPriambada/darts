@@ -408,11 +408,11 @@ class HeterogenousNetworkImageNet(nn.Module):
             self.auxiliary_head = AuxiliaryHeadImageNet(C_prev, num_classes)
         self.global_pooling = nn.AvgPool2d(7)
         logfile.write("last cprev: {}".format(C_prev))
-        if self._layers < 9:
+        if self._layers <= 9:
             C_prev *= 16
-        elif self._layers < 15:
+        elif self._layers <= 15:
             C_prev *= 8
-        elif self._layers < 18:
+        elif self._layers <= 18:
             C_prev *= 4
         self.classifier = nn.Linear(C_prev, num_classes)
 

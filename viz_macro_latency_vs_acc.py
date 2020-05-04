@@ -12,7 +12,7 @@ def device_color_code(device):
     if device == "cpu-i7-4578U":
         return "red"
     elif device == "gpu-rtx2080":
-        return "green"
+        return "black"
     elif device == "gpu-v100":
         return "blue"
     elif device == "cpu-x6132":
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         "--filename",
         nargs="+",
         type=str,
-        default="mcts_generated/arch_profile_cifar100_cloud_arch_op_gap_cifar100_cifar100_op_gap_with_acc.csv",
+        default="mcts_generated/arch_profile_mcts_v7_t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers_imagenet_mcts_with_acc.csv",
         help="start system with test config",
     )
     parser.add_argument(
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         "-s",
         "--save_ext",
         type=str,
-        default="cifar_100_op_gap",
+        default="imagenet_op_gap",
         help="additional name to pdf image results",
     )
     parser.add_argument("--line", action="store_true", default=False)
