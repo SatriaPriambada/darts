@@ -307,6 +307,7 @@ class MacroNetwork(nn.Module):
                 n_family=n_family,
                 target_latency=target_latency,
                 max_layers=max_layers,
+                dataset_name=dataset_name,
                 config=config,
             )
         )

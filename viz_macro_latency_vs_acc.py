@@ -94,7 +94,7 @@ if __name__ == "__main__":
         "-s",
         "--save_ext",
         type=str,
-        default="imagenet_op_gap",
+        default="mnist2_op_gap",
         help="additional name to pdf image results",
     )
     parser.add_argument("--line", action="store_true", default=False)

@@ -7,7 +7,7 @@ import pandas as pd
 import trainer_cifar
 import argparse
 from utils import Namespace
-from model import HeterogenousNetworkCIFAR
+from model import HeterogenousNetworkCIFAR, HeterogenousNetworkImageNet
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -35,8 +35,10 @@ In particular there are two models of best child that one can use
 SCALAR = 1 / math.sqrt(2.0)
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
-INPUT_SIZE = 32
+CIFAR_INPUT_SIZE = 32
 CIFAR_CLASSES = 10
+IMAGENET_INPUT_SIZE = 224
+IMAGENET_CLASSES = 1000
 
 
 def gaussian(X, mu, cov):
@@ -62,6 +64,7 @@ class State:
         n_family,
         target_latency,
         max_layers,
+        dataset_name,
         config,
     ):
         # print("MOVES {}".format(self.MOVES))
@@ -73,6 +76,7 @@ class State:
         self.lat = 1000  # current state lat 99th in ms
         self.target_latency = target_latency  # array of target lat in ms
         self.max_layers = max_layers
+        self.dataset_name = dataset_name  # cifar10 or imagenet
         self.config = config
         # print("__init called __ {}".format(self.moves))
 
@@ -104,55 +108,41 @@ class State:
         return False
 
     def get_acc_latency(self):
-        # For now Uses CIFAR as proxy to get acc and lat
-        # Might add ImageNet later
-
-        model = HeterogenousNetworkCIFAR(
-            self.config["architecture"]["init_channels"],
-            self.config["architecture"]["num_classes"],
-            self.config["architecture"]["layers"],
-            self.config["architecture"]["auxiliary"],
-            self.moves,
-        )
-        model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
-        model.to(self.config["device"])
-        dummy_input = torch.zeros(
-            INPUT_BATCH, INPUT_CHANNEL, INPUT_SIZE, INPUT_SIZE
-        ).to(self.config["device"])
-        mean_lat, latencies = latency_profiler.test_latency(
-            model, dummy_input, self.config["device"]
-        )
-
-        # batch_size = 32
-        # workers = 4
-        # args = Namespace(
-        # 	cutout=False,
-        # 	cutout_length=16
-        # )
-        # train_loader, test_loader = trainer_cifar.get_data_loaders(batch_size, workers, args)
-        # optimizer = optim.SGD(
-        # 	model.parameters(), lr=self.config["lr"], momentum=self.config["momentum"])
-
-        # Run this accuracy profile for 1 epoch to get latency and estimate of acc
-        # total_epoch = 1
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(total_epoch))
-        # best_acc = 0
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # criterion = nn.CrossEntropyLoss()
-        # if torch.cuda.is_available():
-        # 	criterion = criterion.cuda()
-        # # logfile = open("log.txt","w")
-        # for epoch in range(total_epoch):
-        # 	model.drop_path_prob = self.config["architecture"]["drop_path_prob"] * epoch / total_epoch
-        # 	# Train model to get accuracy.
-        # 	train_acc, _ = trainer_cifar.torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader,
-        # 		logfile, device, self.config["architecture"]["auxiliary"])
-        # 	scheduler.step()
-
-        # 	# Obtain validation accuracy.
-        # 	acc, _ = trainer_cifar.torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)
-        # 	# since this MCTS form only do training to get an estimation of accuracy we
-        # 	# there's no need to save checkpoint or best model
+        latencies = []
+        if (self.dataset_name == 'cifar10'){
+            model = HeterogenousNetworkCIFAR(
+                self.config["architecture"]["init_channels"],
+                self.config["architecture"]["num_classes"],
+                self.config["architecture"]["layers"],
+                self.config["architecture"]["auxiliary"],
+                self.moves,
+            )
+            model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
+            model.to(self.config["device"])
+            dummy_input = torch.zeros(
+                INPUT_BATCH, INPUT_CHANNEL, CIFAR_INPUT_SIZE, CIFAR_INPUT_SIZE
+            ).to(self.config["device"])
+            mean_lat, latencies = latency_profiler.test_latency(
+                model, dummy_input, self.config["device"]
+            )
+        } else if (self.dataset_name == 'imagenet'){
+            model = HeterogenousNetworkImageNet(
+                self.config["architecture"]["init_channels"],
+                self.config["architecture"]["num_classes"],
+                self.config["architecture"]["layers"],
+                self.config["architecture"]["auxiliary"],
+                self.moves,
+            )
+            model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
+            model.to(self.config["device"])
+            dummy_input = torch.zeros(
+                INPUT_BATCH, INPUT_CHANNEL, IMAGENET_INPUT_SIZE, IMAGENET_INPUT_SIZE
+            ).to(self.config["device"])
+            mean_lat, latencies = latency_profiler.test_latency(
+                model, dummy_input, self.config["device"]
+            )
+        }
+        
         train_result = {"acc": 0, "lat": latencies[98]}
         print("train_result ", train_result)
         return train_result

@@ -48,7 +48,7 @@ def draw_acc_subplot(df, subplot, color):
 
 def update_df_acc(file_name, device, path):
     df = pd.read_csv(file_name)
-    folder_path = "~/ray_results/train_mcts_cifar100"
+    folder_path = "~/ray_results/simontam/train_mnist_skin_cancer"
     folder_path = os.path.expanduser(folder_path)
     # print("folder_path: {}".format(folder_path))
     acc = 0
@@ -71,7 +71,7 @@ def update_df_acc(file_name, device, path):
             df.loc[row_id, ["acc"]] = acc
             # print(df.loc[df.index == row_id])
     nm = file_name.split(".")
-    df.to_csv(Path(nm[0] + "_cifar100_mcts_with_acc.csv"), index=None)
+    df.to_csv(Path(nm[0] + "_skin_cancer_2_mcts_with_acc.csv"), index=None)
 
 
 if __name__ == "__main__":
