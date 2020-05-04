@@ -46,7 +46,7 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
 SKIN_CANCER_CLASSES = 7
@@ -160,7 +160,7 @@ def get_dist_data_loaders(batch_size, workers):
     np.random.seed(10)
     torch.manual_seed(10)
     torch.cuda.manual_seed(10)
-    data_dir = "/nethome/spriambada3/data/skin-cancer-mnist-ham10000/"
+    data_dir = "/srv/data/datasets/skin-cancer-mnist-ham10000/"
     all_image_path = glob(os.path.join(data_dir, "*", "*.jpg"))
     imageid_path_dict = {
         os.path.splitext(os.path.basename(x))[0]: x for x in all_image_path
@@ -483,7 +483,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=128, help="")
     parser.add_argument("--workers", type=int, default=4, help="")
     parser.add_argument(
-        "--gpu_devices", type=int, nargs="+", default=[5, 6, 7], help=""
+        "--gpu_devices", type=int, nargs="+", default=[0,1,2,3,4,5, 6, 7], help=""
     )
 
     parser.add_argument(
@@ -495,7 +495,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-print",
         "--print-freq",
-        default=1,
+        default=10,
         type=int,
         metavar="N",
         help="print frequency (default: 10)",
