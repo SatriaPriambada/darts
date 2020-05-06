@@ -22,7 +22,7 @@ import pandas as pd
 # python cnn/pytorch_darts_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
 micro_medioid_filename = "generated_micro_imagenet_center.csv"
 macro_generated_filename = (
-    "t1_generated_imagenet_macro_mcts_sim_100_mcts_architecture_layers.csv"
+    "mcts_generated/t1_generated_imagenet_macro_mcts_sim_100_mcts_architecture_layers.csv"
 )
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"

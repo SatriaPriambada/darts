@@ -22,9 +22,9 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import argparse
 
-filename = "arch_profile_mcts_v7"
+filename = "arch_profile_imagenet_v1"
 OPORTUNITY_GAP_ARCHITECTURE = (
-    "t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
+    "t1_generated_imagenet_macro_mcts_sim_100_mcts_architecture_layers.csv"
 )
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
@@ -34,6 +34,7 @@ IMAGENET_CLASSES = 1000
 
 def connvert_df_to_list_arch(df, init_channels, layers, auxiliary, num_classes):
     architectures = []
+    print(df)
     list_arch_name = df["name"].tolist()
     for i, name in enumerate(list_arch_name):
         selected_layers = name.split(";")

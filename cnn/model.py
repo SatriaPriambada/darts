@@ -380,7 +380,7 @@ class HeterogenousNetworkImageNet(nn.Module):
         reduction_prev = True
 
         for i in range(self._layers):
-            if i in [layers // 3, 2 * layers // 3]:
+            if i in [valid_layers // 3, 2 * valid_layers // 3]:
                 C_curr *= 2
                 reduction = True
             else:
@@ -388,7 +388,6 @@ class HeterogenousNetworkImageNet(nn.Module):
 
             if i in none_layers_idx:
                 pass
-                logfile.write("pass non layer: {}".format(i))
             else:
                 cell = Cell(
                     eval(genotypes[i]),
@@ -402,20 +401,12 @@ class HeterogenousNetworkImageNet(nn.Module):
                 self.cells += [cell]
 
             C_prev_prev, C_prev = C_prev, 4 * C_curr
-            if i == 2 * layers // 3:
+            if i == 2 * valid_layers // 3:
                 C_to_auxiliary = C_prev
 
         if auxiliary:
             self.auxiliary_head = AuxiliaryHeadImageNet(C_prev, num_classes)
         self.global_pooling = nn.AvgPool2d(7)
-        if self._layers <= 9:
-            C_prev *= 16
-        elif self._layers <= 15:
-            C_prev *= 8
-        elif self._layers <= 18:
-            C_prev *= 4
-        elif self._layers <= 21:
-            C_prev *= 2
         self.classifier = nn.Linear(C_prev, num_classes)
 
     def forward(self, input):
