@@ -344,17 +344,8 @@ class HeterogenousNetworkMNIST(nn.Module):
 class HeterogenousNetworkImageNet(nn.Module):
     def __init__(self, C, num_classes, layers, auxiliary, genotypes, device="cuda"):
         super(HeterogenousNetworkImageNet, self).__init__()
-        valid_layers = 0
-        none_layers_idx = set(
-            [i for i in range(len(genotypes)) if genotypes[i] == "none"]
-        )
-
-        if layers <= len(genotypes):
-            print(layers, ":", len(genotypes))
-            valid_layers = layers - len(none_layers_idx)
-        else:
-            print(layers, ":", len(genotypes), len(none_layers_idx))
-            valid_layers = len(genotypes) - len(none_layers_idx)
+        valid_genotypes = list(filter(lambda a: a != "none", genotypes))
+        valid_layers = len(valid_genotypes)
         assert valid_layers >= 0
         self._layers = valid_layers
         self._auxiliary = auxiliary
@@ -379,7 +370,7 @@ class HeterogenousNetworkImageNet(nn.Module):
         self.cells = nn.ModuleList()
         reduction_prev = True
 
-        for i in range(self._layers):
+        for i in range(len(valid_genotypes)):
             if i in [valid_layers // 3, 2 * valid_layers // 3]:
                 C_curr *= 2
                 reduction = True
@@ -390,7 +381,7 @@ class HeterogenousNetworkImageNet(nn.Module):
                 pass
             else:
                 cell = Cell(
-                    eval(genotypes[i]),
+                    eval(valid_genotypes[i]),
                     C_prev_prev,
                     C_prev,
                     C_curr,
