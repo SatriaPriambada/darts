@@ -360,7 +360,7 @@ def main_worker(gpu, ngpus_per_node, args):
             best_acc1 = max(acc1, best_acc1)
             if is_best:
                 print("[Tio] model-", i, " best top1 acc: ", best_acc1)
-                logfile = open("log_model_{}.txt".format(i), "w")
+                logfile = open("short_log_model_{}.txt".format(i), "w")
                 logfile.write("[Tio] model-{} best top1 acc: {}".format(i, best_acc1))
                 logfile.close()
 
