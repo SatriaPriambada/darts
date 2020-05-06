@@ -35,9 +35,8 @@ parser.add_argument(
     metavar="N",
     help="number of data loading workers (default: 4)",
 )
-# try 1 for experiment with overall code first
 parser.add_argument(
-    "--epochs", default=1, type=int, metavar="N", help="number of total epochs to run"
+    "--epochs", default=250, type=int, metavar="N", help="number of total epochs to run"
 )
 parser.add_argument(
     "--start-epoch",
@@ -401,36 +400,36 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
-            # measure data loading time
-            data_time.update(time.time() - end)
+        # measure data loading time
+        data_time.update(time.time() - end)
 
-            if args.gpu is not None:
-                images = images.cuda(args.gpu, non_blocking=True)
-            target = target.cuda(args.gpu, non_blocking=True)
+        if args.gpu is not None:
+            images = images.cuda(args.gpu, non_blocking=True)
+        target = target.cuda(args.gpu, non_blocking=True)
 
-            # compute output
-            output, logits_aux = model(images)
-            loss = criterion(output, target)
-            loss_aux = criterion(logits_aux, target)
-            loss += args.auxiliary_weight * loss_aux
+        # compute output
+        output, logits_aux = model(images)
+        loss = criterion(output, target)
+        loss_aux = criterion(logits_aux, target)
+        loss += args.auxiliary_weight * loss_aux
 
-            # measure accuracy and record loss
-            acc1, acc5 = accuracy(output, target, topk=(1, 5))
-            losses.update(loss.item(), images.size(0))
-            top1.update(acc1[0], images.size(0))
-            top5.update(acc5[0], images.size(0))
+        # measure accuracy and record loss
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        losses.update(loss.item(), images.size(0))
+        top1.update(acc1[0], images.size(0))
+        top5.update(acc5[0], images.size(0))
 
-            # compute gradient and do SGD step
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        # compute gradient and do SGD step
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
+        # measure elapsed time
+        batch_time.update(time.time() - end)
+        end = time.time()
 
-            if i % args.print_freq == 0:
-                progress.display(i)
+        if i % args.print_freq == 0:
+            progress.display(i)
 
 
 def validate(val_loader, model, criterion, args):
@@ -448,26 +447,26 @@ def validate(val_loader, model, criterion, args):
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
-                if args.gpu is not None:
-                    images = images.cuda(args.gpu, non_blocking=True)
-                target = target.cuda(args.gpu, non_blocking=True)
+            if args.gpu is not None:
+                images = images.cuda(args.gpu, non_blocking=True)
+            target = target.cuda(args.gpu, non_blocking=True)
 
-                # compute output
-                output, logits_aux = model(images)
-                loss = criterion(output, target)
+            # compute output
+            output, logits_aux = model(images)
+            loss = criterion(output, target)
 
-                # measure accuracy and record loss
-                acc1, acc5 = accuracy(output, target, topk=(1, 5))
-                losses.update(loss.item(), images.size(0))
-                top1.update(acc1[0], images.size(0))
-                top5.update(acc5[0], images.size(0))
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            losses.update(loss.item(), images.size(0))
+            top1.update(acc1[0], images.size(0))
+            top5.update(acc5[0], images.size(0))
 
-                # measure elapsed time
-                batch_time.update(time.time() - end)
-                end = time.time()
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
 
-                if i % args.print_freq == 0:
-                    progress.display(i)
+            if i % args.print_freq == 0:
+                progress.display(i)
         # TODO: this should also be done with the ProgressMeter
         print(
             " * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}".format(top1=top1, top5=top5)
@@ -477,9 +476,10 @@ def validate(val_loader, model, criterion, args):
 
 
 def save_checkpoint(state, is_best, idx, filename):
-    torch.save(state, filename)
+    folder = "/nethome/spriambada3/ray_results/ddp_imagenet/"
+    torch.save(state, folder + filename)
     if is_best:
-        shutil.copyfile(filename, "short_model_best_{}.pth.tar".format(idx))
+        shutil.copyfile(filename, folder + "short_model_best_{}.pth.tar".format(idx))
 
 
 class AverageMeter(object):
