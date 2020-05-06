@@ -21,9 +21,7 @@ import pandas as pd
 
 # python cnn/pytorch_darts_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
 micro_medioid_filename = "generated_micro_imagenet_center.csv"
-macro_generated_filename = (
-    "mcts_generated/t1_generated_imagenet_macro_mcts_sim_100_mcts_architecture_layers.csv"
-)
+macro_generated_filename = "mcts_generated/t1_generated_imagenet_short.csv"
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 
@@ -378,7 +376,7 @@ def main_worker(gpu, ngpus_per_node, args):
                     },
                     is_best,
                     i,
-                    "checkpoint_{}.pth.tar".format(i),
+                    "short_checkpoint_{}.pth.tar".format(i),
                 )
         print("[Tio] finish training model-", i)
         print("[Tio] model-", i, " best_acc1:", best_acc1)
@@ -489,7 +487,7 @@ def validate(val_loader, model, criterion, args):
 def save_checkpoint(state, is_best, idx, filename):
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, "model_best_{}.pth.tar".format(idx))
+        shutil.copyfile(filename, "short_model_best_{}.pth.tar".format(idx))
 
 
 class AverageMeter(object):
