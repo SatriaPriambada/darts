@@ -49,7 +49,7 @@ parser.add_argument(
 parser.add_argument(
     "-b",
     "--batch-size",
-    default=64,
+    default=32,
     type=int,
     metavar="N",
     help="mini-batch size (default: 256), this is the total "
@@ -401,8 +401,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
-        # use this if to check overall code running first
-        if i < 1:
             # measure data loading time
             data_time.update(time.time() - end)
 
@@ -433,8 +431,6 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
             if i % args.print_freq == 0:
                 progress.display(i)
-        else:
-            break
 
 
 def validate(val_loader, model, criterion, args):
@@ -452,8 +448,6 @@ def validate(val_loader, model, criterion, args):
     with torch.no_grad():
         end = time.time()
         for i, (images, target) in enumerate(val_loader):
-            # use this if to check overall code running first
-            if i < 1:
                 if args.gpu is not None:
                     images = images.cuda(args.gpu, non_blocking=True)
                 target = target.cuda(args.gpu, non_blocking=True)
@@ -474,8 +468,6 @@ def validate(val_loader, model, criterion, args):
 
                 if i % args.print_freq == 0:
                     progress.display(i)
-            else:
-                break
         # TODO: this should also be done with the ProgressMeter
         print(
             " * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}".format(top1=top1, top5=top5)
