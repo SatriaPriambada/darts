@@ -146,6 +146,7 @@ parser.add_argument(
 best_acc1 = 0
 CLASSES = 1000
 
+
 class CrossEntropyLabelSmooth(nn.Module):
     def __init__(self, num_classes, epsilon):
         super(CrossEntropyLabelSmooth, self).__init__()
@@ -298,18 +299,20 @@ def load_data(args):
     )
     return train_loader, val_loader, train_sampler
 
-def setup_opt(model, args):
-     optimizer = torch.optim.SGD(
-         model.parameters(),
-         args.lr,
-         momentum=args.momentum,
-         weight_decay=args.weight_decay,
-     )
 
-     scheduler = torch.optim.lr_scheduler.StepLR(
-         optimizer, args.decay_period, gamma=args.gamma
-     )
-     return optimizer, scheduler
+def setup_opt(model, args):
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        args.lr,
+        momentum=args.momentum,
+        weight_decay=args.weight_decay,
+    )
+
+    scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, args.decay_period, gamma=args.gamma
+    )
+    return optimizer, scheduler
+
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -359,6 +362,9 @@ def main_worker(gpu, ngpus_per_node, args):
             best_acc1 = max(acc1, best_acc1)
             if is_best:
                 print("[Tio] model-", i, " best top1 acc: ", best_acc1)
+                logfile = open("log_model_{}.txt".format(i), "w")
+                logfile.write("[Tio] model-{} best top1 acc: {}".format(i, best_acc1))
+                logfile.close()
 
             if not args.multiprocessing_distributed or (
                 args.multiprocessing_distributed and args.rank % ngpus_per_node == 0
@@ -431,6 +437,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
                 progress.display(i)
         else:
             break
+
 
 def validate(val_loader, model, criterion, args):
     batch_time = AverageMeter("Time", ":6.3f")

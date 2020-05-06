@@ -353,7 +353,7 @@ class HeterogenousNetworkImageNet(nn.Module):
             print(layers, ":", len(genotypes))
             valid_layers = layers - len(none_layers_idx)
         else:
-            print(layers, ":" ,len(genotypes), len(none_layers_idx))
+            print(layers, ":", len(genotypes), len(none_layers_idx))
             valid_layers = len(genotypes) - len(none_layers_idx)
         assert valid_layers >= 0
         self._layers = valid_layers
@@ -378,8 +378,6 @@ class HeterogenousNetworkImageNet(nn.Module):
 
         self.cells = nn.ModuleList()
         reduction_prev = True
-        logfile = open("log_model_build.txt", "w")
-        logfile.write("[Tio] log for architecture total layers {}".format(self._layers))
 
         for i in range(self._layers):
             if i in [layers // 3, 2 * layers // 3]:
@@ -410,13 +408,14 @@ class HeterogenousNetworkImageNet(nn.Module):
         if auxiliary:
             self.auxiliary_head = AuxiliaryHeadImageNet(C_prev, num_classes)
         self.global_pooling = nn.AvgPool2d(7)
-        logfile.write("last cprev: {}".format(C_prev))
         if self._layers <= 9:
             C_prev *= 16
         elif self._layers <= 15:
             C_prev *= 8
         elif self._layers <= 18:
             C_prev *= 4
+        elif self._layers <= 21:
+            C_prev *= 2
         self.classifier = nn.Linear(C_prev, num_classes)
 
     def forward(self, input):
