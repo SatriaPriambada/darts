@@ -72,29 +72,33 @@ def profile_arch_lat_and_acc(
         model = architecture["model"].to(device)
         model.drop_path_prob = drop_path_prob
         # profile parameters
-        macs, params = profile(model, inputs=(input,))
         # profile latencies
-        mean_lat, latencies = latency_profiler.test_latency(model, input, device)
-        # profile accuracy
+        try:
+            macs, params = profile(model, inputs=(input,))
+            mean_lat, latencies = latency_profiler.test_latency(model, input, device)
+            dict_list.append(
+                {
+                    "name": architecture["name"],
+                    "acc": 0,
+                    "mean_lat": mean_lat,
+                    "lat95": latencies[94],
+                    "lat99": latencies[98],
+                    "std_dev_lat": stdev(latencies),
+                    "macs": macs,
+                    "params": params,
+                    "cell_layers": architecture["cell_layers"],
+                    "none_layers": architecture["none_layers"],
+                    "skip_conn": architecture["skip_conn"],
+                }
+            )
+   
+            # print(architecture)
+            print("============================")        
+        except RuntimeError as e:
+            print("error forward pass:", e)        
+# profile accuracy
         # valid_acc, valid_obj = acc_profiler.infer(test_loader, model, criterion, device)
-        dict_list.append(
-            {
-                "name": architecture["name"],
-                "acc": 0,
-                "mean_lat": mean_lat,
-                "lat95": latencies[94],
-                "lat99": latencies[98],
-                "std_dev_lat": stdev(latencies),
-                "macs": macs,
-                "params": params,
-                "cell_layers": architecture["cell_layers"],
-                "none_layers": architecture["none_layers"],
-                "skip_conn": architecture["skip_conn"],
-            }
-        )
-
-        # print(architecture)
-        print("============================")
+        print("============================AAAA")
 
     model_df_with_acc_and_lat = pd.DataFrame.from_dict(dict_list)
 
@@ -118,10 +122,10 @@ if __name__ == "__main__":
 
     seed = 0
     np.random.seed(seed)
-    init_channels = 36
+    init_channels = 48
     layers = args.layers
     auxiliary = True
-    drop_path_prob = 0.2
+    drop_path_prob = 0
     dataset_name = "imagenet"
     num_classes = IMAGENET_CLASSES
     filepath = "/srv/data/datasets/ImageNet"
