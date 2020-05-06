@@ -377,19 +377,16 @@ class HeterogenousNetworkImageNet(nn.Module):
             else:
                 reduction = False
 
-            if i in none_layers_idx:
-                pass
-            else:
-                cell = Cell(
-                    eval(valid_genotypes[i]),
-                    C_prev_prev,
-                    C_prev,
-                    C_curr,
-                    reduction,
-                    reduction_prev,
-                )
-                reduction_prev = reduction
-                self.cells += [cell]
+            cell = Cell(
+                eval(valid_genotypes[i]),
+                C_prev_prev,
+                C_prev,
+                C_curr,
+                reduction,
+                reduction_prev,
+            )
+            reduction_prev = reduction
+            self.cells += [cell]
 
             C_prev_prev, C_prev = C_prev, 4 * C_curr
             if i == 2 * valid_layers // 3:
