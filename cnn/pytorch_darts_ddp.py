@@ -51,7 +51,7 @@ parser.add_argument(
 parser.add_argument(
     "-b",
     "--batch-size",
-    default=256,
+    default=64,
     type=int,
     metavar="N",
     help="mini-batch size (default: 256), this is the total "
@@ -144,7 +144,7 @@ parser.add_argument(
 )
 
 best_acc1 = 0
-
+CLASSES = 1000
 
 class CrossEntropyLabelSmooth(nn.Module):
     def __init__(self, num_classes, epsilon):
@@ -200,12 +200,15 @@ def main():
         main_worker(args.gpu, ngpus_per_node, args)
 
 
-def generate_models():
+def generate_models(args):
     df_macro_arch = pd.read_csv(macro_generated_filename)
     df_micro_genotypes = pd.read_csv(micro_medioid_filename)
 
     selected_archs = []
-    for selected_med in df_macro_arch["selected_med"]:
+    for selected_med in df_macro_arch["selected_medioid_idx"]:
+        # print("selected_med", type(selected_med))
+        selected_med = eval(selected_med)
+        # print("selected_med after eval",type(selected_med))
         selected_genotype = [df_micro_genotypes.iloc[x, 0] for x in selected_med]
         model = HeterogenousNetworkImageNet(
             args.init_channels, 1000, 25, True, selected_genotype
@@ -222,8 +225,6 @@ def generate_models():
                 # When using a single GPU per process and per
                 # DistributedDataParallel, we need to divide the batch size
                 # ourselves based on the total number of GPUs we have
-                args.batch_size = int(args.batch_size / ngpus_per_node)
-                args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
                 model = torch.nn.parallel.DistributedDataParallel(
                     model, device_ids=[args.gpu], find_unused_parameters=True
                 )
@@ -243,7 +244,7 @@ def generate_models():
     return selected_archs
 
 
-def load_data():
+def load_data(args):
 
     # Data loading code
     traindir = os.path.join(args.data, "train")
@@ -295,8 +296,20 @@ def load_data():
         num_workers=args.workers,
         pin_memory=True,
     )
-    return train_loader, val_loader
+    return train_loader, val_loader, train_sampler
 
+def setup_opt(model, args):
+     optimizer = torch.optim.SGD(
+         model.parameters(),
+         args.lr,
+         momentum=args.momentum,
+         weight_decay=args.weight_decay,
+     )
+
+     scheduler = torch.optim.lr_scheduler.StepLR(
+         optimizer, args.decay_period, gamma=args.gamma
+     )
+     return optimizer, scheduler
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -319,52 +332,17 @@ def main_worker(gpu, ngpus_per_node, args):
             rank=args.rank,
         )
     # create model
-    models = generate_models()
+    models = generate_models(args)
 
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss().cuda(args.gpu)
     criterion_smooth = CrossEntropyLabelSmooth(CLASSES, args.label_smooth)
     criterion_smooth = criterion_smooth.cuda(args.gpu)
 
-    optimizer = torch.optim.SGD(
-        model.parameters(),
-        args.lr,
-        momentum=args.momentum,
-        weight_decay=args.weight_decay,
-    )
-
-    scheduler = torch.optim.lr_scheduler.StepLR(
-        optimizer, args.decay_period, gamma=args.gamma
-    )
-
-    # optionally resume from a checkpoint
-    if args.resume:
-        if os.path.isfile(args.resume):
-            print("=> loading checkpoint '{}'".format(args.resume))
-            if args.gpu is None:
-                checkpoint = torch.load(args.resume)
-            else:
-                # Map model to be loaded to specified single gpu.
-                loc = "cuda:{}".format(args.gpu)
-                checkpoint = torch.load(args.resume, map_location=loc)
-            args.start_epoch = checkpoint["epoch"]
-            best_acc1 = checkpoint["best_acc1"]
-            if args.gpu is not None:
-                # best_acc1 may be from a checkpoint from a different GPU
-                best_acc1 = best_acc1.to(args.gpu)
-            model.load_state_dict(checkpoint["state_dict"])
-            optimizer.load_state_dict(checkpoint["optimizer"])
-            print(
-                "=> loaded checkpoint '{}' (epoch {})".format(
-                    args.resume, checkpoint["epoch"]
-                )
-            )
-        else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
-
     cudnn.benchmark = True
-    train_loader, val_loader = load_data()
+    train_loader, val_loader, train_sampler = load_data(args)
     for i, model in enumerate(models):
+        optimizer, scheduler = setup_opt(model, args)
         for epoch in range(args.start_epoch, args.epochs):
             if args.distributed:
                 train_sampler.set_epoch(epoch)
@@ -397,7 +375,6 @@ def main_worker(gpu, ngpus_per_node, args):
                     "checkpoint_{}.pth.tar".format(i),
                 )
         print("[Tio] finish training model-", i)
-        global best_acc1
         print("[Tio] model-", i, " best_acc1:", best_acc1)
         best_acc1 = 0
         print("[Tio] reset best_acc1:", best_acc1)
@@ -452,7 +429,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
             if i % args.print_freq == 0:
                 progress.display(i)
-
+        else:
+            break
 
 def validate(val_loader, model, criterion, args):
     batch_time = AverageMeter("Time", ":6.3f")
@@ -491,7 +469,8 @@ def validate(val_loader, model, criterion, args):
 
                 if i % args.print_freq == 0:
                     progress.display(i)
-
+            else:
+                break
         # TODO: this should also be done with the ProgressMeter
         print(
             " * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}".format(top1=top1, top5=top5)

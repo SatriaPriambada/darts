@@ -1,1 +1,1 @@
-[Tio] log for architecture total layers 25last cprev: 576
+[Tio] log for architecture total layers 2last cprev: 192
