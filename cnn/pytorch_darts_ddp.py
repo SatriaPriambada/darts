@@ -36,7 +36,7 @@ parser.add_argument(
     help="number of data loading workers (default: 4)",
 )
 parser.add_argument(
-    "--epochs", default=1, type=int, metavar="N", help="number of total epochs to run"
+    "--epochs", default=250, type=int, metavar="N", help="number of total epochs to run"
 )
 parser.add_argument(
     "--start-epoch",
@@ -311,6 +311,15 @@ def setup_opt(model, args):
     return optimizer, scheduler
 
 
+def note_acc_loss_for_drawing_graph(model_id, epoch, acc1, loss, df):
+    df = df.append(
+        {"model_id": model_id, "epoch": epoch, "acc1": acc1, "loss": loss},
+        ignore_index=True,
+    )
+    df.to_csv(Path("acc_loss_log_model_{}.csv".format(model_id)), index=None)
+    return df
+
+
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
     args.gpu = gpu
@@ -343,6 +352,7 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader, val_loader, train_sampler = load_data(args)
     for i, model in enumerate(models):
         optimizer, scheduler = setup_opt(model, args)
+        df = pd.DataFrame()
         for epoch in range(args.start_epoch, args.epochs):
             if args.distributed:
                 train_sampler.set_epoch(epoch)
@@ -352,7 +362,8 @@ def main_worker(gpu, ngpus_per_node, args):
             scheduler.step()
 
             # evaluate on validation set
-            acc1 = validate(val_loader, model, criterion, args)
+            acc1, loss = validate(val_loader, model, criterion, args)
+            df = note_acc_loss_for_drawing_graph(model_id, epoch, acc1, loss, df)
 
             # remember best acc@1 and save checkpoint
             is_best = acc1 > best_acc1
@@ -472,14 +483,14 @@ def validate(val_loader, model, criterion, args):
             " * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}".format(top1=top1, top5=top5)
         )
 
-    return top1.avg
+    return top1.avg, losses.avg
 
 
 def save_checkpoint(state, is_best, idx, filename):
     folder = "/nethome/spriambada3/ray_results/ddp_imagenet/"
     torch.save(state, folder + filename)
     if is_best:
-        shutil.copyfile(filename, "{}short_model_best_{}.pth.tar".format(folder,idx))
+        shutil.copyfile(filename, folder + "short_model_best_{}.pth.tar".format(idx))
 
 
 class AverageMeter(object):
