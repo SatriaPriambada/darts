@@ -36,7 +36,7 @@ parser.add_argument(
     help="number of data loading workers (default: 4)",
 )
 parser.add_argument(
-    "--epochs", default=250, type=int, metavar="N", help="number of total epochs to run"
+    "--epochs", default=1, type=int, metavar="N", help="number of total epochs to run"
 )
 parser.add_argument(
     "--start-epoch",
@@ -479,7 +479,7 @@ def save_checkpoint(state, is_best, idx, filename):
     folder = "/nethome/spriambada3/ray_results/ddp_imagenet/"
     torch.save(state, folder + filename)
     if is_best:
-        shutil.copyfile(filename, folder + "short_model_best_{}.pth.tar".format(idx))
+        shutil.copyfile(filename, "{}short_model_best_{}.pth.tar".format(folder,idx))
 
 
 class AverageMeter(object):
