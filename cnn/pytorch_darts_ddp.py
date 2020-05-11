@@ -22,7 +22,7 @@ import pandas as pd
 # python cnn/pytorch_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
 load_filename = "generated_micro_imagenet_center.csv"
 os.environ["CUDA_VISIBLE_DEVICES"] = "3,4,5,6,7"
-
+CLASSES = 1000
 parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
 parser.add_argument(
@@ -267,7 +267,7 @@ def main_worker(gpu, ngpus_per_node, args):
     selected_genotype = [micro_genotypes.iloc[x, 0] for x in selected_med]
 
     model = HeterogenousNetworkImageNet(
-        args.init_channels, 1000, 25, True, selected_genotype
+        args.init_channels, CLASSES, 25, True, selected_genotype
     )
     model.drop_path_prob = 0
 
@@ -393,18 +393,12 @@ def main_worker(gpu, ngpus_per_node, args):
         pin_memory=True,
     )
 
-    if args.evaluate:
-        validate(val_loader, model, criterion, args)
-        return
-
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        scheduler.step()
-
         # train for one epoch
         train(train_loader, model, criterion, optimizer, epoch, args)
-
+        scheduler.step()
         # evaluate on validation set
         acc1 = validate(val_loader, model, criterion, args)
 
