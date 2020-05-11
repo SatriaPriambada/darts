@@ -310,6 +310,15 @@ def setup_opt(model, args):
     return optimizer, scheduler
 
 
+def note_acc_loss_for_drawing_graph(model_id, epoch, acc1, loss, df):
+    df = df.append(
+        {"model_id": model_id, "epoch": epoch, "acc1": acc1, "loss": loss},
+        ignore_index=True,
+    )
+    df.to_csv(Path("acc_loss_log_model_{}.csv".format(model_id)), index=None)
+    return df
+
+
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
     args.gpu = gpu
@@ -342,6 +351,7 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader, val_loader, train_sampler = load_data(args)
     for i, model in enumerate(models):
         optimizer, scheduler = setup_opt(model, args)
+        df = pd.DataFrame()
         for epoch in range(args.start_epoch, args.epochs):
             if args.distributed:
                 train_sampler.set_epoch(epoch)
@@ -351,7 +361,8 @@ def main_worker(gpu, ngpus_per_node, args):
             scheduler.step()
 
             # evaluate on validation set
-            acc1 = validate(val_loader, model, criterion, args)
+            acc1, loss = validate(val_loader, model, criterion, args)
+            df = note_acc_loss_for_drawing_graph(model_id, epoch, acc1, loss, df)
 
             # remember best acc@1 and save checkpoint
             is_best = acc1 > best_acc1
@@ -471,7 +482,7 @@ def validate(val_loader, model, criterion, args):
             " * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}".format(top1=top1, top5=top5)
         )
 
-    return top1.avg
+    return top1.avg, losses.avg
 
 
 def save_checkpoint(state, is_best, idx, filename):
