@@ -349,7 +349,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     cudnn.benchmark = True
     train_loader, val_loader, train_sampler = load_data(args)
-    for i, model in enumerate(models):
+    for model_id, model in enumerate(models):
         optimizer, scheduler = setup_opt(model, args)
         df = pd.DataFrame()
         for epoch in range(args.start_epoch, args.epochs):
@@ -368,9 +368,11 @@ def main_worker(gpu, ngpus_per_node, args):
             is_best = acc1 > best_acc1
             best_acc1 = max(acc1, best_acc1)
             if is_best:
-                print("[Tio] model-", i, " best top1 acc: ", best_acc1)
-                logfile = open("short_log_model_{}.txt".format(i), "w")
-                logfile.write("[Tio] model-{} best top1 acc: {}".format(i, best_acc1))
+                print("[Tio] model-", model_id, " best top1 acc: ", best_acc1)
+                logfile = open("short_log_model_{}.txt".format(model_id), "w")
+                logfile.write(
+                    "[Tio] model-{} best top1 acc: {}".format(model_id, best_acc1)
+                )
                 logfile.close()
 
             if not args.multiprocessing_distributed or (
