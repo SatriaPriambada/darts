@@ -19,10 +19,12 @@ import torchvision.datasets as datasets
 from model import HeterogenousNetworkImageNet
 import pandas as pd
 
-# python cnn/pytorch_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
-load_filename = "generated_micro_imagenet_center.csv"
-os.environ["CUDA_VISIBLE_DEVICES"] = "3,4,5,6,7"
-CLASSES = 1000
+# python cnn/pytorch_darts_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
+micro_medioid_filename = "generated_micro_imagenet_center.csv"
+macro_generated_filename = "mcts_generated/t1_generated_imagenet_short_small.csv"
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4,5,6,7"
+
 parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
 parser.add_argument(
@@ -34,7 +36,7 @@ parser.add_argument(
     help="number of data loading workers (default: 4)",
 )
 parser.add_argument(
-    "--epochs", default=250, type=int, metavar="N", help="number of total epochs to run"
+    "--epochs", default=120, type=int, metavar="N", help="number of total epochs to run"
 )
 parser.add_argument(
     "--start-epoch",
@@ -46,7 +48,7 @@ parser.add_argument(
 parser.add_argument(
     "-b",
     "--batch-size",
-    default=256,
+    default=32,
     type=int,
     metavar="N",
     help="mini-batch size (default: 256), this is the total "
@@ -139,6 +141,7 @@ parser.add_argument(
 )
 
 best_acc1 = 0
+CLASSES = 1000
 
 
 class CrossEntropyLabelSmooth(nn.Module):
@@ -195,152 +198,51 @@ def main():
         main_worker(args.gpu, ngpus_per_node, args)
 
 
-def main_worker(gpu, ngpus_per_node, args):
-    global best_acc1
-    args.gpu = gpu
+def generate_models(args):
+    df_macro_arch = pd.read_csv(macro_generated_filename)
+    df_micro_genotypes = pd.read_csv(micro_medioid_filename)
 
-    if args.gpu is not None:
-        print("Use GPU: {} for training".format(args.gpu))
-
-    if args.distributed:
-        if args.dist_url == "env://" and args.rank == -1:
-            args.rank = int(os.environ["RANK"])
-        if args.multiprocessing_distributed:
-            # For multiprocessing distributed training, rank needs to be the
-            # global rank among all the processes
-            args.rank = args.rank * ngpus_per_node + gpu
-        dist.init_process_group(
-            backend=args.dist_backend,
-            init_method=args.dist_url,
-            world_size=args.world_size,
-            rank=args.rank,
+    selected_archs = []
+    for selected_med in df_macro_arch["selected_medioid_idx"]:
+        # print("selected_med", type(selected_med))
+        selected_med = eval(selected_med)
+        # print("selected_med after eval",type(selected_med))
+        selected_genotype = [df_micro_genotypes.iloc[x, 0] for x in selected_med]
+        model = HeterogenousNetworkImageNet(
+            args.init_channels, 1000, 25, True, selected_genotype
         )
-    # create model
-    selected_med = [
-        5,
-        4,
-        5,
-        5,
-        2,
-        6,
-        6,
-        5,
-        4,
-        5,
-        6,
-        0,
-        0,
-        7,
-        7,
-        0,
-        3,
-        4,
-        7,
-        7,
-        1,
-        8,
-        2,
-        4,
-        7,
-        0,
-        5,
-        4,
-        2,
-        7,
-        5,
-        7,
-        6,
-        1,
-        8,
-        2,
-        2,
-        1,
-        7,
-        6,
-        3,
-        2,
-        0,
-        0,
-        3,
-    ]
-    micro_genotypes = pd.read_csv(load_filename)
-    selected_genotype = [micro_genotypes.iloc[x, 0] for x in selected_med]
+        model.drop_path_prob = 0
 
-    model = HeterogenousNetworkImageNet(
-        args.init_channels, CLASSES, 25, True, selected_genotype
-    )
-    model.drop_path_prob = 0
-
-    if args.distributed:
-        # For multiprocessing distributed, DistributedDataParallel constructor
-        # should always set the single device scope, otherwise,
-        # DistributedDataParallel will use all available devices.
-        if args.gpu is not None:
-            torch.cuda.set_device(args.gpu)
-            model.cuda(args.gpu)
-            # When using a single GPU per process and per
-            # DistributedDataParallel, we need to divide the batch size
-            # ourselves based on the total number of GPUs we have
-            args.batch_size = int(args.batch_size / ngpus_per_node)
-            args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
-            model = torch.nn.parallel.DistributedDataParallel(
-                model, device_ids=[args.gpu], find_unused_parameters=True
-            )
-        else:
-            model.cuda()
-            # DistributedDataParallel will divide and allocate batch_size to all
-            # available GPUs if device_ids are not set
-            model = torch.nn.parallel.DistributedDataParallel(
-                model, find_unused_parameters=True
-            )
-    elif args.gpu is not None:
-        torch.cuda.set_device(args.gpu)
-        model = model.cuda(args.gpu)
-    else:
-        model = torch.nn.DataParallel(model).cuda()
-
-    # define loss function (criterion) and optimizer
-    criterion = nn.CrossEntropyLoss().cuda(args.gpu)
-    criterion_smooth = CrossEntropyLabelSmooth(CLASSES, args.label_smooth)
-    criterion_smooth = criterion_smooth.cuda(args.gpu)
-
-    optimizer = torch.optim.SGD(
-        model.parameters(),
-        args.lr,
-        momentum=args.momentum,
-        weight_decay=args.weight_decay,
-    )
-
-    scheduler = torch.optim.lr_scheduler.StepLR(
-        optimizer, args.decay_period, gamma=args.gamma
-    )
-
-    # optionally resume from a checkpoint
-    if args.resume:
-        if os.path.isfile(args.resume):
-            print("=> loading checkpoint '{}'".format(args.resume))
-            if args.gpu is None:
-                checkpoint = torch.load(args.resume)
-            else:
-                # Map model to be loaded to specified single gpu.
-                loc = "cuda:{}".format(args.gpu)
-                checkpoint = torch.load(args.resume, map_location=loc)
-            args.start_epoch = checkpoint["epoch"]
-            best_acc1 = checkpoint["best_acc1"]
+        if args.distributed:
+            # For multiprocessing distributed, DistributedDataParallel constructor
+            # should always set the single device scope, otherwise,
+            # DistributedDataParallel will use all available devices.
             if args.gpu is not None:
-                # best_acc1 may be from a checkpoint from a different GPU
-                best_acc1 = best_acc1.to(args.gpu)
-            model.load_state_dict(checkpoint["state_dict"])
-            optimizer.load_state_dict(checkpoint["optimizer"])
-            print(
-                "=> loaded checkpoint '{}' (epoch {})".format(
-                    args.resume, checkpoint["epoch"]
+                torch.cuda.set_device(args.gpu)
+                model.cuda(args.gpu)
+                # When using a single GPU per process and per
+                # DistributedDataParallel, we need to divide the batch size
+                # ourselves based on the total number of GPUs we have
+                model = torch.nn.parallel.DistributedDataParallel(
+                    model, device_ids=[args.gpu], find_unused_parameters=True
                 )
-            )
+            else:
+                model.cuda()
+                # DistributedDataParallel will divide and allocate batch_size to all
+                # available GPUs if device_ids are not set
+                model = torch.nn.parallel.DistributedDataParallel(
+                    model, find_unused_parameters=True
+                )
+        elif args.gpu is not None:
+            torch.cuda.set_device(args.gpu)
+            model = model.cuda(args.gpu)
         else:
-            print("=> no checkpoint found at '{}'".format(args.resume))
+            model = torch.nn.DataParallel(model).cuda()
+        selected_archs.append(model)
+    return selected_archs
 
-    cudnn.benchmark = True
+
+def load_data(args):
 
     # Data loading code
     traindir = os.path.join(args.data, "train")
@@ -392,32 +294,92 @@ def main_worker(gpu, ngpus_per_node, args):
         num_workers=args.workers,
         pin_memory=True,
     )
+    return train_loader, val_loader, train_sampler
 
-    for epoch in range(args.start_epoch, args.epochs):
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
-        # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args)
-        scheduler.step()
-        # evaluate on validation set
-        acc1 = validate(val_loader, model, criterion, args)
+def setup_opt(model, args):
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        args.lr,
+        momentum=args.momentum,
+        weight_decay=args.weight_decay,
+    )
 
-        # remember best acc@1 and save checkpoint
-        is_best = acc1 > best_acc1
-        best_acc1 = max(acc1, best_acc1)
+    scheduler = torch.optim.lr_scheduler.StepLR(
+        optimizer, args.decay_period, gamma=args.gamma
+    )
+    return optimizer, scheduler
 
-        if not args.multiprocessing_distributed or (
-            args.multiprocessing_distributed and args.rank % ngpus_per_node == 0
-        ):
-            save_checkpoint(
-                {
-                    "epoch": epoch + 1,
-                    "state_dict": model.state_dict(),
-                    "best_acc1": best_acc1,
-                    "optimizer": optimizer.state_dict(),
-                },
-                is_best,
-            )
+
+def main_worker(gpu, ngpus_per_node, args):
+    global best_acc1
+    args.gpu = gpu
+
+    if args.gpu is not None:
+        print("Use GPU: {} for training".format(args.gpu))
+
+    if args.distributed:
+        if args.dist_url == "env://" and args.rank == -1:
+            args.rank = int(os.environ["RANK"])
+        if args.multiprocessing_distributed:
+            # For multiprocessing distributed training, rank needs to be the
+            # global rank among all the processes
+            args.rank = args.rank * ngpus_per_node + gpu
+        dist.init_process_group(
+            backend=args.dist_backend,
+            init_method=args.dist_url,
+            world_size=args.world_size,
+            rank=args.rank,
+        )
+    # create model
+    models = generate_models(args)
+
+    # define loss function (criterion) and optimizer
+    criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+    criterion_smooth = CrossEntropyLabelSmooth(CLASSES, args.label_smooth)
+    criterion_smooth = criterion_smooth.cuda(args.gpu)
+
+    cudnn.benchmark = True
+    train_loader, val_loader, train_sampler = load_data(args)
+    for i, model in enumerate(models):
+        optimizer, scheduler = setup_opt(model, args)
+        for epoch in range(args.start_epoch, args.epochs):
+            if args.distributed:
+                train_sampler.set_epoch(epoch)
+
+            # train for one epoch
+            train(train_loader, model, criterion, optimizer, epoch, args)
+            scheduler.step()
+
+            # evaluate on validation set
+            acc1 = validate(val_loader, model, criterion, args)
+
+            # remember best acc@1 and save checkpoint
+            is_best = acc1 > best_acc1
+            best_acc1 = max(acc1, best_acc1)
+            if is_best:
+                print("[Tio] model-", i, " best top1 acc: ", best_acc1)
+                logfile = open("short_log_model_{}.txt".format(i), "w")
+                logfile.write("[Tio] model-{} best top1 acc: {}".format(i, best_acc1))
+                logfile.close()
+
+            if not args.multiprocessing_distributed or (
+                args.multiprocessing_distributed and args.rank % ngpus_per_node == 0
+            ):
+                save_checkpoint(
+                    {
+                        "epoch": epoch + 1,
+                        "state_dict": model.state_dict(),
+                        "best_acc1": best_acc1,
+                        "optimizer": optimizer.state_dict(),
+                    },
+                    is_best,
+                    i,
+                    "short_checkpoint_{}.pth.tar".format(i),
+                )
+        print("[Tio] finish training model-", i)
+        print("[Tio] model-", i, " best_acc1:", best_acc1)
+        best_acc1 = 0
+        print("[Tio] reset best_acc1:", best_acc1)
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
@@ -504,7 +466,6 @@ def validate(val_loader, model, criterion, args):
 
             if i % args.print_freq == 0:
                 progress.display(i)
-
         # TODO: this should also be done with the ProgressMeter
         print(
             " * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}".format(top1=top1, top5=top5)
@@ -513,10 +474,11 @@ def validate(val_loader, model, criterion, args):
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename="checkpoint.pth.tar"):
-    torch.save(state, filename)
+def save_checkpoint(state, is_best, idx, filename):
+    folder = "/nethome/spriambada3/ray_results/ddp_imagenet/"
+    torch.save(state, folder + filename)
     if is_best:
-        shutil.copyfile(filename, "model_best.pth.tar")
+        shutil.copyfile(filename, folder + "short_model_best_{}.pth.tar".format(idx))
 
 
 class AverageMeter(object):
