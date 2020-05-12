@@ -17,6 +17,7 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from model import HeterogenousNetworkImageNet
+from pathlib import Path
 import pandas as pd
 
 # python cnn/pytorch_darts_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
