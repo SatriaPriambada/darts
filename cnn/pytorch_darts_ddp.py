@@ -17,13 +17,14 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 from model import HeterogenousNetworkImageNet
+from pathlib import Path
 import pandas as pd
 
 # python cnn/pytorch_darts_ddp.py --dist-url 'tcp://127.0.0.1:7890' --dist-backend 'nccl' --multiprocessing-distributed --world-size 1 --rank 0 /srv/data/datasets/ImageNet
 micro_medioid_filename = "generated_micro_imagenet_center.csv"
-macro_generated_filename = "mcts_generated/t1_generated_imagenet_short.csv"
+macro_generated_filename = "mcts_generated/t1_generated_imagenet_short_small.csv"
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4,5,6,7"
 
 parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
@@ -36,7 +37,7 @@ parser.add_argument(
     help="number of data loading workers (default: 4)",
 )
 parser.add_argument(
-    "--epochs", default=250, type=int, metavar="N", help="number of total epochs to run"
+    "--epochs", default=120, type=int, metavar="N", help="number of total epochs to run"
 )
 parser.add_argument(
     "--start-epoch",
@@ -295,7 +296,6 @@ def load_data(args):
         pin_memory=True,
     )
     return train_loader, val_loader, train_sampler
-
 
 def setup_opt(model, args):
     optimizer = torch.optim.SGD(
