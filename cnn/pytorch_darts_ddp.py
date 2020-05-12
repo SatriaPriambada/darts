@@ -493,7 +493,9 @@ def save_checkpoint(state, is_best, idx, filename):
     folder = "/nethome/spriambada3/ray_results/ddp_imagenet/"
     torch.save(state, folder + filename)
     if is_best:
-        shutil.copyfile(filename, "{}short_model_best_{}.pth.tar".format(folder, idx))
+        shutil.copyfile(
+            folder + filename, "{}short_model_best_{}.pth.tar".format(folder, idx)
+        )
 
 
 class AverageMeter(object):
