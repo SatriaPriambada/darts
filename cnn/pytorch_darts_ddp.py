@@ -297,6 +297,7 @@ def load_data(args):
     )
     return train_loader, val_loader, train_sampler
 
+
 def setup_opt(model, args):
     optimizer = torch.optim.SGD(
         model.parameters(),
@@ -388,10 +389,10 @@ def main_worker(gpu, ngpus_per_node, args):
                     },
                     is_best,
                     i,
-                    "short_checkpoint_{}.pth.tar".format(i),
+                    "short_checkpoint_{}.pth.tar".format(model_id),
                 )
-        print("[Tio] finish training model-", i)
-        print("[Tio] model-", i, " best_acc1:", best_acc1)
+        print("[Tio] finish training model-", model_id)
+        print("[Tio] model-", model_id, " best_acc1:", best_acc1)
         best_acc1 = 0
         print("[Tio] reset best_acc1:", best_acc1)
 
