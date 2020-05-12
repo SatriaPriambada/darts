@@ -364,7 +364,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
             # evaluate on validation set
             acc1, loss = validate(val_loader, model, criterion, args)
-            df = note_acc_loss_for_drawing_graph(model_id, epoch, acc1, loss, df)
+            df = note_acc_loss_for_drawing_graph(model_id, epoch, acc1.item(), loss, df)
 
             # remember best acc@1 and save checkpoint
             is_best = acc1 > best_acc1
