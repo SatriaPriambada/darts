@@ -388,7 +388,7 @@ def main_worker(gpu, ngpus_per_node, args):
                         "optimizer": optimizer.state_dict(),
                     },
                     is_best,
-                    i,
+                    model_id,
                     "short_checkpoint_{}.pth.tar".format(model_id),
                 )
         print("[Tio] finish training model-", model_id)
