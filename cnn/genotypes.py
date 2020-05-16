@@ -9,8 +9,19 @@ PRIMITIVES = [
     "skip_connect",
     "sep_conv_3x3",
     "sep_conv_5x5",
+    "sep_conv_7x7",
     "dil_conv_3x3",
     "dil_conv_5x5",
+    "mobilenetV2_1.0",
+    "mobilenetV2_1.4",
+    "mobilenetV3_1.0_3x3_Hswish",
+    "mobilenetV3_1.0_5x5_Hswish",
+    "mobilenetV3_1.0_3x3_Hsigmoid",
+    "mobilenetV3_1.0_5x5_Hsigmoid",
+    "mobilenetV3_1.0_3x3_Hswish_SE",
+    "mobilenetV3_1.0_5x5_Hswish_SE",
+    "mobilenetV3_1.0_3x3_Hsigmoid_SE",
+    "mobilenetV3_1.0_5x5_Hsigmoid_SE",
 ]
 
 NASNet = Genotype(
