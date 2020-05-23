@@ -52,7 +52,7 @@ def gaussian(X, mu, cov):
 
 
 class State:
-    MOVES = pd.read_csv("generated_micro_cpu_center.csv")["genotype"].to_list()
+    MOVES = pd.read_csv("generated_micro_cuda:0_cpu_center.csv")["genotype"].to_list()
     MOVES.append("none")
     num_moves = len(MOVES)
 
