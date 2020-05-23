@@ -17,7 +17,6 @@ from torch.autograd import Variable
 from model import HeterogenousNetworkCIFAR
 
 CIFAR_CLASSES = 10
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 best_acc = 0
 
 
@@ -92,7 +91,7 @@ def main():
         # Train model to get accuracy.
         logfile.write("start training epoch {} \n".format(epoch))
         logfile.flush()
-        train_acc, _ = torch_1_v_4_train(
+        train_acc, loss = torch_1_v_4_train(
             epoch,
             model,
             optimizer,
@@ -106,13 +105,18 @@ def main():
         logfile.write("start test epoch {} \n".format(epoch))
         logfile.flush()
         acc, _ = torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)
-        logfile.write("[Tio] acc {}".format(acc))
+        logfile.write("[Tio] epoch {} acc {} loss {}".format(epoch, acc, loss))
         logfile.flush()
         tune.track.log(mean_accuracy=acc)
-        torch.save(model, "./checkpoint_{}.pth".format(config["architecture"]["id"]))
+        torch.save(model, "./checkpoint_mcts_cifar.pth")
         if acc > best_acc:
+            logfile.write(
+                "[Tio] find new best model epoch {} acc {} loss {}".format(
+                    epoch, acc, loss
+                )
+            )
             best_acc = acc
-            torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
+            torch.save(model, "./best_mcts_cifar.pth")
     logfile.write("[Tio] acc {}".format(best_acc))
     logfile.flush()
     logfile.close()
@@ -144,8 +148,6 @@ def torch_1_v_4_train(
         logfile.flush()
         optimizer.zero_grad()
         logits, logits_aux = model(data)
-        logfile.write("logits: {} logits_aux: {}\n".format(logits, logits_aux))
-        logfile.flush()
         loss = criterion(logits, target)
         if auxiliary:
             loss_aux = criterion(logits_aux, target)
