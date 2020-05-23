@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 OPS = {
     "none": lambda C, stride, affine: Zero(stride),
@@ -28,28 +29,28 @@ OPS = {
     "mobilenetV2_1.0": lambda C, stride, affine: InvertedResidual(C, C, stride, 1),
     "mobilenetV2_1.4": lambda C, stride, affine: InvertedResidual(C, C, stride, 6),
     "mobilenetV3_1.0_3x3_Hswish": lambda C, stride, affine: MobileBottleneck(
-        C, C, 3, stride, 1, se=False, nl="RE"
+        C, C, 3, stride, exp=C, se=False, nl="RE"
     ),
     "mobilenetV3_1.0_5x5_Hswish": lambda C, stride, affine: MobileBottleneck(
-        C, C, 5, stride, 1, se=False, nl="RE"
+        C, C, 5, stride, exp=C, se=False, nl="RE"
     ),
     "mobilenetV3_1.0_3x3_Hsigmoid": lambda C, stride, affine: MobileBottleneck(
-        C, C, 3, stride, 1, se=False, nl="HS"
+        C, C, 3, stride, exp=C, se=False, nl="HS"
     ),
     "mobilenetV3_1.0_5x5_Hsigmoid": lambda C, stride, affine: MobileBottleneck(
-        C, C, 5, stride, 1, se=False, nl="HS"
+        C, C, 5, stride, exp=C, se=False, nl="HS"
     ),
     "mobilenetV3_1.0_3x3_Hswish_SE": lambda C, stride, affine: MobileBottleneck(
-        C, C, 3, stride, 1, se=True, nl="RE"
+        C, C, 3, stride, exp=C, se=True, nl="RE"
     ),
     "mobilenetV3_1.0_5x5_Hswish_SE": lambda C, stride, affine: MobileBottleneck(
-        C, C, 5, stride, 1, se=True, nl="RE"
+        C, C, 5, stride, exp=C, se=True, nl="RE"
     ),
     "mobilenetV3_1.0_3x3_Hsigmoid_SE": lambda C, stride, affine: MobileBottleneck(
-        C, C, 3, stride, 1, se=True, nl="HS"
+        C, C, 3, stride, exp=C, se=True, nl="HS"
     ),
     "mobilenetV3_1.0_5x5_Hsigmoid_SE": lambda C, stride, affine: MobileBottleneck(
-        C, C, 5, stride, 1, se=True, nl="HS"
+        C, C, 5, stride, exp=C, se=True, nl="HS"
     ),
     "conv_7x1_1x7": lambda C, stride, affine: nn.Sequential(
         nn.ReLU(inplace=False),
@@ -135,6 +136,24 @@ class SepConv(nn.Module):
 
 
 # Original MobileNetV2 https://github.com/pytorch/vision
+class ConvBNReLU(nn.Sequential):
+    def __init__(self, in_planes, out_planes, kernel_size=3, stride=1, groups=1):
+        padding = (kernel_size - 1) // 2
+        super(ConvBNReLU, self).__init__(
+            nn.Conv2d(
+                in_planes,
+                out_planes,
+                kernel_size,
+                stride,
+                padding,
+                groups=groups,
+                bias=False,
+            ),
+            nn.BatchNorm2d(out_planes),
+            nn.ReLU6(inplace=True),
+        )
+
+
 class InvertedResidual(nn.Module):
     def __init__(self, C_in, C_out, stride, exp):
         super(InvertedResidual, self).__init__()
@@ -186,34 +205,32 @@ class Hsigmoid(nn.Module):
         return F.relu6(x + 3.0, inplace=self.inplace) / 6.0
 
 
-def _make_divisible(v, divisor, min_value=None):
-    """
-    This function is taken from the original tf repo.
-    It ensures that all layers have a channel number that is divisible by 8
-    It can be seen here:
-    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
-    :param v:
-    :param divisor:
-    :param min_value:
-    :return:
-    """
-    if min_value is None:
-        min_value = divisor
-    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-    # Make sure that round down does not go down by more than 10%.
-    if new_v < 0.9 * v:
-        new_v += divisor
-    return new_v
+"""
+This function is taken from the original tf repo.
+It ensures that all layers have a channel number that is divisible by 8
+It can be seen here:
+https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+:param v:
+:param divisor:
+:param min_value:
+:return:
+"""
 
 
-class SELayer(nn.Module):
+def make_divisible(x, divisible_by=8):
+    import numpy as np
+
+    return int(np.ceil(x * 1.0 / divisible_by) * divisible_by)
+
+
+class SEModule(nn.Module):
     def __init__(self, channel, reduction=4):
-        super(SELayer, self).__init__()
+        super(SEModule, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
-            nn.Linear(channel, _make_divisible(channel // reduction, 8)),
+            nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
-            nn.Linear(_make_divisible(channel // reduction, 8), channel),
+            nn.Linear(channel // reduction, channel, bias=False),
             Hsigmoid(),
         )
 
@@ -221,7 +238,7 @@ class SELayer(nn.Module):
         b, c, _, _ = x.size()
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
-        return x * y
+        return x * y.expand_as(x)
 
 
 class MobileBottleneck(nn.Module):
@@ -241,9 +258,9 @@ class MobileBottleneck(nn.Module):
         else:
             raise NotImplementedError
         if se:
-            SELayer = SEModule
+            SELayer = SEModule(C_out)
         else:
-            SELayer = Identity
+            SELayer = Identity()
 
         self.conv = nn.Sequential(
             # pw
@@ -253,7 +270,7 @@ class MobileBottleneck(nn.Module):
             # dw
             conv_layer(exp, exp, kernel, stride, padding, groups=exp, bias=False),
             norm_layer(exp),
-            SELayer(exp),
+            SELayer,
             nlin_layer(inplace=True),
             # pw-linear
             conv_layer(exp, C_out, 1, 1, 0, bias=False),
