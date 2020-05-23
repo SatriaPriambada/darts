@@ -139,13 +139,9 @@ def torch_1_v_4_train(
     top5 = utils.AverageMeter()
 
     for batch_idx, (data, target) in enumerate(train_loader):
-        logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
-        logfile.flush()
 
         data = Variable(data).to(device)
         target = Variable(target).to(device)
-        logfile.write("data: {} target: {}\n".format(data, target))
-        logfile.flush()
         optimizer.zero_grad()
         logits, logits_aux = model(data)
         loss = criterion(logits, target)
@@ -153,8 +149,6 @@ def torch_1_v_4_train(
             loss_aux = criterion(logits_aux, target)
             loss += auxiliary_weight * loss_aux
         loss.backward()
-        logfile.write("loss {} \n".format(loss))
-        logfile.flush()
         grad_clip = 5
         nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
