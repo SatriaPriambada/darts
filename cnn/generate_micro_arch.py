@@ -31,6 +31,8 @@ import latency_profiler
 from pathlib import Path
 import argparse
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+
 log_format = "%(asctime)s %(message)s"
 logging.basicConfig(
     stream=sys.stdout,
@@ -158,6 +160,7 @@ def kmedioid_grouping(df, nclusters):
 
     return centers_genotype
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--layers", type=int, default=25, help="number of layers")
@@ -175,4 +178,3 @@ if __name__ == "__main__":
     list_genotypes = generate_micro(
         seed, gpuid, init_channels, layers, auxiliary, drop_path_prob, device
     )
-
