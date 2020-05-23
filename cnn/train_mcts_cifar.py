@@ -15,11 +15,11 @@ import torch.backends.cudnn as cudnn
 
 from torch.autograd import Variable
 from model import HeterogenousNetworkCIFAR
-
 CIFAR_CLASSES = 10
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 def main():
+    best_acc = 0
     if not torch.cuda.is_available():
         logging.info("no gpu device available")
         sys.exit(1)
@@ -112,11 +112,10 @@ def main():
         acc, _ = torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)
         logfile.write("[Tio] acc {}".format(acc))
         logfile.flush()
-        tune.track.log(mean_accuracy=acc)
-        torch.save(model, "./checkpoint_{}.pth".format(config["architecture"]["id"]))
+        torch.save(model, "./checkpoint_mcts_cifar.pth")
         if acc > best_acc:
             best_acc = acc
-            torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
+            torch.save(model, "./best_mcts_cifar.pth")
     logfile.write("[Tio] acc {}".format(best_acc))
     logfile.flush()
     logfile.close()
@@ -143,18 +142,14 @@ def torch_1_v_4_train(
 
         data = Variable(data).to(device)
         target = Variable(target).to(device)
-        logfile.write("data: {} target: {}\n".format(data, target))
-        logfile.flush()
         optimizer.zero_grad()
         logits, logits_aux = model(data)
-        logfile.write("logits: {} logits_aux: {}\n".format(logits, logits_aux))
-        logfile.flush()
         loss = criterion(logits, target)
         if auxiliary:
             loss_aux = criterion(logits_aux, target)
             loss += auxiliary_weight * loss_aux
         loss.backward()
-        logfile.write("loss {} \n".format(loss))
+        logfile.write("epoch-{} loss {} \n".format(epoch, loss))
         logfile.flush()
         grad_clip = 5
         nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
@@ -198,7 +193,7 @@ def torch_1_v_4_test(
             top5.update(prec5.item(), n)
 
             logfile.write(
-                "valid {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+                "valid {} {} {} {}\n".format(batch_idx, objs.avg, top1.avg, top5.avg)
             )
             logfile.flush()
     return top1.avg, objs.avg
@@ -209,7 +204,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data", type=str, default="~/data", help="location of the data corpus"
     )
-    parser.add_argument("--batch_size", type=int, default=96, help="batch size")
+    parser.add_argument("--batch_size", type=int, default=32, help="batch size")
     parser.add_argument(
         "--learning_rate", type=float, default=0.025, help="init learning rate"
     )
