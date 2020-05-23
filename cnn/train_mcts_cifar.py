@@ -18,6 +18,8 @@ from model import HeterogenousNetworkCIFAR
 
 CIFAR_CLASSES = 10
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+best_acc = 0
+
 
 def main():
     if not torch.cuda.is_available():
@@ -38,11 +40,7 @@ def main():
 
     selected_layers = model_name.split(";")
     model = HeterogenousNetworkCIFAR(
-        args.init_channels,
-        CIFAR_CLASSES,
-        25,
-        args.auxiliary,
-        selected_layers,
+        args.init_channels, CIFAR_CLASSES, 25, args.auxiliary, selected_layers,
     )
     model.drop_path_prob = args.drop_path_prob
     model = model.cuda()
@@ -86,9 +84,7 @@ def main():
         optimizer, float(args.epochs)
     )
     logfile = open("log_mcts_cifar.txt", "w")
-    logfile.write(
-        "[Tio] log for architecture id {}".format(model_name)
-    )
+    logfile.write("[Tio] log for architecture id {}".format(model_name))
     device = torch.device("cuda")
     for epoch in range(args.epochs):
         scheduler.step()
@@ -120,6 +116,7 @@ def main():
     logfile.write("[Tio] acc {}".format(best_acc))
     logfile.flush()
     logfile.close()
+
 
 def torch_1_v_4_train(
     epoch,
