@@ -43,7 +43,10 @@ import async_timeout
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5"
 OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
-EPOCH_SIZE = 128
+EPOCH_SIZE = 24
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,5,6,7"
 
 
 async def per_res_train(device, device_id, hyperparameter_space, sched, path):

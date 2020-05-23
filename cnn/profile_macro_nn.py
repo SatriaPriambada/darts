@@ -127,12 +127,16 @@ if __name__ == "__main__":
     dataset_name = "cifar10"
     num_classes = CIFAR_CLASSES
     filepath = "~/data/" + dataset_name
+<<<<<<< HEAD
     if "gpu" in args.device:
         print("profile on gpu")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     else:
         print("profile on cpu")
         device = torch.device("cpu")
+=======
+    device = torch.device('cuda:7' if torch.cuda.is_available() else 'cpu')
+>>>>>>> river-experiment
 
     print("Load Data from: {}".format(filepath))
     CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
@@ -163,6 +167,7 @@ if __name__ == "__main__":
     else:
         print("no gpu device available, use CPU")
 
+<<<<<<< HEAD
     model_df_with_acc_and_lat = profile_arch_lat_and_acc(
         dataset_name,
         test_loader,
@@ -175,3 +180,9 @@ if __name__ == "__main__":
         Path("mcts_generated/" + filename + "_" + OPORTUNITY_GAP_ARCHITECTURE),
         index=None,
     )
+=======
+    model_df_with_acc_and_lat = profile_arch_lat_and_acc(dataset_name, 
+        test_loader, sampled_architecture, criterion, device, drop_path_prob)
+    model_df_with_acc_and_lat.to_csv(Path(filename + '_{}.csv'.format(str(device))), 
+    index = None)
+>>>>>>> river-experiment
