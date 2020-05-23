@@ -17,7 +17,6 @@ from torch.autograd import Variable
 from model import HeterogenousNetworkCIFAR
 
 CIFAR_CLASSES = 10
-best_acc = 0
 
 
 def main():
@@ -84,6 +83,7 @@ def main():
     )
     logfile = open("log_mcts_cifar.txt", "w")
     logfile.write("[Tio] log for architecture id {}".format(model_name))
+    best_acc = 0
     device = torch.device("cuda")
     for epoch in range(args.epochs):
         scheduler.step()
