@@ -110,7 +110,7 @@ class State:
 
     def get_acc_latency(self):
         latencies = []
-        if (self.dataset_name == 'cifar10'):
+        if self.dataset_name == "cifar10":
             model = HeterogenousNetworkCIFAR(
                 self.config["architecture"]["init_channels"],
                 self.config["architecture"]["num_classes"],
@@ -126,7 +126,7 @@ class State:
             mean_lat, latencies = latency_profiler.test_latency(
                 model, dummy_input, self.config["device"]
             )
-        elif (self.dataset_name == 'imagenet'):
+        elif self.dataset_name == "imagenet":
             model = HeterogenousNetworkImageNet(
                 self.config["architecture"]["init_channels"],
                 self.config["architecture"]["num_classes"],
@@ -142,13 +142,11 @@ class State:
             mean_lat, latencies = latency_profiler.test_latency(
                 model, dummy_input, self.config["device"]
             )
-        
-        
         train_result = {"acc": 0, "lat": latencies[98]}
         print("train_result ", train_result)
         return train_result
 
-    def reward(self):
+    def reward(self, num_layers):
         w = 0.5
         train_result = self.get_acc_latency()
         self.acc = train_result["acc"]
@@ -159,7 +157,7 @@ class State:
             if self.lat < strata:
                 lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
         acc_part = abs((1 - (self.acc / 100))) ** w
-        r = 1 - (acc_part * lat_part)
+        r = 1 - (acc_part * lat_part) + (1 / (1 + exp(-(num_layers - (self.max_layers - 10) )))
         return r
 
 
@@ -256,6 +254,7 @@ def BESTCHILD(node, scalar):
     if not node.children:
         return node
     else:
+        total_children = len(node.children)
         for c in node.children:
             exploit = c.reward / c.visits
             explore = math.sqrt(2.0 * math.log(node.visits) / float(c.visits))
@@ -300,9 +299,10 @@ def BESTCHILDREN(node, scalar, bestchildren):
 
 
 def DEFAULTPOLICY(state):
+    tree_length = len(front.state.moves)
     while state.terminal() == False:
         state = state.next_state()
-    return state.reward(), state.get_acc_latency()
+    return state.reward(tree_length), state.get_acc_latency()
 
 
 def BACKUP(node, reward, latest_latency, latest_acc):
