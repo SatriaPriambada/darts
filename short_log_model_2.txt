@@ -1,1 +1,1 @@
-[Tio] model-2 best top1 acc: 2.0460000038146973
+[Tio] model-2 best top1 acc: 68.7760009765625

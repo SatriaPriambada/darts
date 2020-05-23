@@ -157,7 +157,7 @@ class State:
             if self.lat < strata:
                 lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
         acc_part = abs((1 - (self.acc / 100))) ** w
-        r = 1 - (acc_part * lat_part) + (1 / (1 + exp(-(num_layers - (self.max_layers - 10) )))
+        r = 1 - (acc_part * lat_part) + (1 / (1 + math.exp(-(num_layers - (self.max_layers - 10) ))))
         return r
 
 
@@ -299,7 +299,7 @@ def BESTCHILDREN(node, scalar, bestchildren):
 
 
 def DEFAULTPOLICY(state):
-    tree_length = len(front.state.moves)
+    tree_length = len(state.moves)
     while state.terminal() == False:
         state = state.next_state()
     return state.reward(tree_length), state.get_acc_latency()
