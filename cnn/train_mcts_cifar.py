@@ -107,7 +107,6 @@ def main():
         acc, _ = torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)
         logfile.write("[Tio] epoch {} acc {} loss {}".format(epoch, acc, loss))
         logfile.flush()
-        tune.track.log(mean_accuracy=acc)
         torch.save(model, "./checkpoint_mcts_cifar.pth")
         if acc > best_acc:
             logfile.write(
