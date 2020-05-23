@@ -89,7 +89,7 @@ class State:
             med_idx.append(rand_idx)
             nextmove.append(self.MOVES[rand_idx])
 
-        if self.moves + nextmove < self.max_layers:
+        if len(self.moves) + len(nextmove) < self.max_layers:
             self.moves = self.moves + nextmove
             self.selected_med_idx = self.selected_med_idx + med_idx
         else:
