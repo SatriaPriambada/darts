@@ -85,75 +85,122 @@ def main():
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, float(args.epochs)
     )
+    logfile = open("log_mcts_cifar.txt", "w")
+    logfile.write(
+        "[Tio] log for architecture id {}".format(model_name)
+    )
 
     for epoch in range(args.epochs):
         scheduler.step()
-        logging.info("epoch %d lr %e", epoch, scheduler.get_lr()[0])
         model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
+        # Train model to get accuracy.
+        logfile.write("start training epoch {} \n".format(epoch))
+        logfile.flush()
+        train_acc, _ = torch_1_v_4_train(
+            epoch,
+            model,
+            optimizer,
+            criterion,
+            train_loader,
+            logfile,
+            device,
+            config["architecture"]["auxiliary"],
+        )
+        # Obtain validation accuracy.
+        logfile.write("start test epoch {} \n".format(epoch))
+        logfile.flush()
+        acc, _ = torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)
+        logfile.write("[Tio] acc {}".format(acc))
+        logfile.flush()
+        tune.track.log(mean_accuracy=acc)
+        torch.save(model, "./checkpoint_{}.pth".format(config["architecture"]["id"]))
+        if acc > best_acc:
+            best_acc = acc
+            torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
+    logfile.write("[Tio] acc {}".format(best_acc))
+    logfile.flush()
+    logfile.close()
 
-        train_acc, train_obj = train(train_queue, model, criterion, optimizer)
-        logging.info("train_acc %f", train_acc)
-
-        valid_acc, valid_obj = infer(valid_queue, model, criterion)
-        logging.info("valid_acc %f", valid_acc)
-
-        utils.save(model, os.path.join(args.save, "weights.pt"))
-
-
-def train(train_queue, model, criterion, optimizer):
+def torch_1_v_4_train(
+    epoch,
+    model,
+    optimizer,
+    criterion,
+    train_loader,
+    logfile,
+    device=torch.device("cpu"),
+    auxiliary=True,
+):
+    model.to(device)
+    model.train()
     objs = utils.AverageMeter()
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
-    model.train()
 
-    for step, (input, target) in enumerate(train_queue):
-        input = Variable(input).cuda()
-        target = Variable(target).cuda(async=True)
+    for batch_idx, (data, target) in enumerate(train_loader):
+        logfile.write("epoch: {} batchid: {}\n".format(epoch, batch_idx))
+        logfile.flush()
 
+        data = Variable(data).to(device)
+        target = Variable(target).to(device)
+        logfile.write("data: {} target: {}\n".format(data, target))
+        logfile.flush()
         optimizer.zero_grad()
-        logits, logits_aux = model(input)
+        logits, logits_aux = model(data)
+        logfile.write("logits: {} logits_aux: {}\n".format(logits, logits_aux))
+        logfile.flush()
         loss = criterion(logits, target)
-        if args.auxiliary:
+        if auxiliary:
             loss_aux = criterion(logits_aux, target)
-            loss += args.auxiliary_weight * loss_aux
+            loss += auxiliary_weight * loss_aux
         loss.backward()
-        nn.utils.clip_grad_norm(model.parameters(), args.grad_clip)
+        logfile.write("loss {} \n".format(loss))
+        logfile.flush()
+        grad_clip = 5
+        nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
         optimizer.step()
 
         prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
-        n = input.size(0)
-        objs.update(loss.data[0], n)
-        top1.update(prec1.data[0], n)
-        top5.update(prec5.data[0], n)
-
-        if step % args.report_freq == 0:
-            logging.info("train %03d %e %f %f", step, objs.avg, top1.avg, top5.avg)
+        n = data.size(0)
+        objs.update(loss.item(), n)
+        top1.update(prec1.item(), n)
+        top5.update(prec5.item(), n)
+        logfile.write(
+            "train {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+        )
+        logfile.flush()
 
     return top1.avg, objs.avg
 
 
-def infer(valid_queue, model, criterion):
+def torch_1_v_4_test(
+    epoch, model, criterion, test_loader, logfile, device=torch.device("cpu")
+):
+    model.to(device)
+    model.eval()
+    logfile.write("start test\n")
+    logfile.flush()
     objs = utils.AverageMeter()
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
-    model.eval()
+    with torch.no_grad():
+        for batch_idx, (data, target) in enumerate(test_loader):
+            data = Variable(data).to(device)
+            target = Variable(target).to(device)
 
-    for step, (input, target) in enumerate(valid_queue):
-        input = Variable(input, volatile=True).cuda()
-        target = Variable(target, volatile=True).cuda(async=True)
+            logits, _ = model(data)
+            loss = criterion(logits, target)
 
-        logits, _ = model(input)
-        loss = criterion(logits, target)
+            prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
+            n = data.size(0)
+            objs.update(loss.item(), n)
+            top1.update(prec1.item(), n)
+            top5.update(prec5.item(), n)
 
-        prec1, prec5 = utils.accuracy(logits, target, topk=(1, 5))
-        n = input.size(0)
-        objs.update(loss.data[0], n)
-        top1.update(prec1.data[0], n)
-        top5.update(prec5.data[0], n)
-
-        if step % args.report_freq == 0:
-            logging.info("valid %03d %e %f %f", step, objs.avg, top1.avg, top5.avg)
-
+            logfile.write(
+                "valid {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+            )
+            logfile.flush()
     return top1.avg, objs.avg
 
 
