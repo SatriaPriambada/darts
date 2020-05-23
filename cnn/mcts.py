@@ -89,8 +89,13 @@ class State:
             med_idx.append(rand_idx)
             nextmove.append(self.MOVES[rand_idx])
 
-        self.moves = self.moves + nextmove
-        self.selected_med_idx = self.selected_med_idx + med_idx
+        if self.moves + nextmove < self.max_layers:
+            self.moves = self.moves + nextmove
+            self.selected_med_idx = self.selected_med_idx + med_idx
+        else:
+            remaining_choice = self.max_layers - len(self.moves)
+            self.moves = self.moves + nextmove[:remaining_choice]
+            self.selected_med_idx = self.selected_med_idx + med_idx[:remaining_choice]
 
         return State(
             self.moves,
@@ -157,7 +162,11 @@ class State:
             if self.lat < strata:
                 lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
         acc_part = abs((1 - (self.acc / 100))) ** w
-        r = 1 - (acc_part * lat_part) + (1 / (1 + math.exp(-(num_layers - (self.max_layers - 10) ))))
+        r = (
+            1
+            - (acc_part * lat_part)
+            + (1 / (1 + math.exp(-(num_layers - (self.max_layers - 10)))))
+        )
         return r
 
 
