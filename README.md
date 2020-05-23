@@ -33,6 +33,26 @@ python cnn/generate_macro_arch.py
 python cnn/profile_macro_nn.py
 ```
 
+### Train One Macro Architectures Results
+
+Please be cautious, This step requires GPU and lots of hours to run
+
+```
+python cnn/train_mcts_cifar.py
+```
+
+OR FOR IMAGENET SOTA CONFIG
+
+```
+python cnn/pytorch_ddp.py
+```
+
+OR FOR IMAGENET DARTS CONFIG
+
+```
+python cnn/pytorch_darts_ddp.py
+```
+
 ### Train Macro Architectures Results
 
 Please be cautious, This step requires GPU and lots of hours to run

@@ -24,7 +24,7 @@ import pandas as pd
 micro_medioid_filename = "generated_micro_imagenet_center.csv"
 macro_generated_filename = "mcts_generated/t1_generated_imagenet_short_small.csv"
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4,5,6,7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,3,4,5,6,7"
 
 parser = argparse.ArgumentParser(description="PyTorch ImageNet Training")
 parser.add_argument("data", metavar="DIR", help="path to dataset")
