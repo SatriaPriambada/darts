@@ -17,7 +17,7 @@ from torch.autograd import Variable
 from model import HeterogenousNetworkCIFAR
 
 CIFAR_CLASSES = 10
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 def main():
     if not torch.cuda.is_available():
@@ -38,10 +38,10 @@ def main():
 
     selected_layers = model_name.split(";")
     model = HeterogenousNetworkCIFAR(
-        args.init_channels
-        args.num_classes
-        args.layers
-        args.auxiliary
+        args.init_channels,
+        CIFAR_CLASSES,
+        25,
+        args.auxiliary,
         selected_layers,
     )
     model.drop_path_prob = args.drop_path_prob
@@ -66,7 +66,7 @@ def main():
         root=args.data, train=False, download=True, transform=valid_transform
     )
 
-    train_queue = torch.utils.data.DataLoader(
+    train_loader = torch.utils.data.DataLoader(
         train_data,
         batch_size=args.batch_size,
         shuffle=True,
@@ -74,7 +74,7 @@ def main():
         num_workers=2,
     )
 
-    valid_queue = torch.utils.data.DataLoader(
+    test_loader = torch.utils.data.DataLoader(
         valid_data,
         batch_size=args.batch_size,
         shuffle=False,
@@ -89,7 +89,7 @@ def main():
     logfile.write(
         "[Tio] log for architecture id {}".format(model_name)
     )
-
+    device = torch.device("cuda")
     for epoch in range(args.epochs):
         scheduler.step()
         model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
@@ -104,7 +104,7 @@ def main():
             train_loader,
             logfile,
             device,
-            config["architecture"]["auxiliary"],
+            args.auxiliary,
         )
         # Obtain validation accuracy.
         logfile.write("start test epoch {} \n".format(epoch))
@@ -207,7 +207,7 @@ def torch_1_v_4_test(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("train.py")
     parser.add_argument(
-        "--data", type=str, default="../data", help="location of the data corpus"
+        "--data", type=str, default="~/data", help="location of the data corpus"
     )
     parser.add_argument("--batch_size", type=int, default=96, help="batch size")
     parser.add_argument(
