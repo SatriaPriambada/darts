@@ -40,7 +40,8 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "op_gap_cloud/arch_below_12.csv"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5"
+OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
 EPOCH_SIZE = 128
 import os
@@ -56,7 +57,7 @@ async def per_res_train(device, device_id, hyperparameter_space, sched, path):
         config=hyperparameter_space,
         resources_per_trial={"gpu": 1},
         verbose=1,
-        name="train_mcts_hetero_cifar",  # This is used to specify the logging directory.
+        name="train_mcts_cifar_13_04_2020",  # This is used to specify the logging directory.
     )
 
     print("Finishing latency strata: {}".format(device_id))
@@ -92,7 +93,7 @@ async def async_train(device, model_architectures, n_family, sched, path):
 
     for device_id in devices:
         hyperparameter_space = {
-            "model_name": "train_mnist",
+            "model_name": "train_cifar",
             "architecture": tune.grid_search(arr_of_models[device_id]),
             "lr": tune.grid_search([args.learning_rate]),
             "momentum": tune.grid_search([args.momentum]),
@@ -198,7 +199,8 @@ def train_heterogenous_network_cifar(config):
         if acc > best_acc:
             best_acc = acc
             torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
-
+    logfile.write("[Tio] acc {}".format(best_acc))
+    logfile.flush()
     logfile.close()
 
 
@@ -385,4 +387,3 @@ if __name__ == "__main__":
     loop.run_until_complete(future)
     print(f"Execution time: { time.time() - _start }")
     loop.close()
-

@@ -12,7 +12,7 @@ def device_color_code(device):
     if device == "cpu-i7-4578U":
         return "red"
     elif device == "gpu-rtx2080":
-        return "green"
+        return "black"
     elif device == "gpu-v100":
         return "blue"
     elif device == "cpu-x6132":
@@ -65,8 +65,8 @@ def draw_errorbar_graph(file_name, device, path):
 
     # lgd = plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.,labels=labels)
     save_name = path + "/acc_lat_{}".format(device)
-    plt.savefig(save_name + ".pdf", ext="pdf", bbox_inches="tight")
-    plt.savefig(save_name + ".png", ext="png", bbox_inches="tight")
+    plt.savefig(save_name + args.save_ext + ".pdf", ext="pdf", bbox_inches="tight")
+    plt.savefig(save_name + args.save_ext + ".png", ext="png", bbox_inches="tight")
     plt.show()
 
 
@@ -77,18 +77,25 @@ if __name__ == "__main__":
         "--filename",
         nargs="+",
         type=str,
-        default="arch_profile_cpu.csv",
+        default="mcts_generated/arch_profile_mcts_v7_t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers_imagenet_mcts_with_acc.csv",
         help="start system with test config",
     )
     parser.add_argument(
         "-d",
         "--device",
         type=str,
-        default="cpu-i7-4578U",
+        default="gpu-rtx2080",
         help="device used for profile",
     )
     parser.add_argument(
         "-p", "--path", type=str, default="img", help="path to pdf image results"
+    )
+    parser.add_argument(
+        "-s",
+        "--save_ext",
+        type=str,
+        default="mnist2_op_gap",
+        help="additional name to pdf image results",
     )
     parser.add_argument("--line", action="store_true", default=False)
     

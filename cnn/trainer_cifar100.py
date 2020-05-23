@@ -38,9 +38,11 @@ import pandas as pd
 from profile_macro_nn import connvert_df_to_list_arch
 import async_timeout
 
-OPORTUNITY_GAP_ARCHITECTURE = "op_gap_cloud/arch_op_gap_cifar100.csv"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+
+OPORTUNITY_GAP_ARCHITECTURE = "mcts_generated/t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
 # Change these values if you want the training to run quicker or slower.
-EPOCH_SIZE = 256
+EPOCH_SIZE = 32
 
 
 async def per_res_train(device, device_id, hyperparameter_space, sched, path):
@@ -88,7 +90,7 @@ async def async_train(device, model_architectures, n_family, sched, path):
 
     for device_id in devices:
         hyperparameter_space = {
-            "model_name": "train_mnist",
+            "model_name": "train_cifar100",
             "architecture": tune.grid_search(arr_of_models[device_id]),
             "lr": tune.grid_search([args.learning_rate]),
             "momentum": tune.grid_search([args.momentum]),
@@ -149,11 +151,7 @@ def train_heterogenous_network_cifar(config):
     model.drop_path_prob = config["architecture"]["drop_path_prob"]
     workers = 4
     batch_size = EPOCH_SIZE
-    if config["architecture"]["cell_layers"] > 18:
-        batch_size = 64
-    elif config["architecture"]["cell_layers"] > 12:
-        batch_size = 128
-
+    
     train_loader, test_loader = get_data_loaders(batch_size, workers, args)
 
     optimizer = optim.SGD(
@@ -193,7 +191,8 @@ def train_heterogenous_network_cifar(config):
         if acc > best_acc:
             best_acc = acc
             torch.save(model, "./best_{}.pth".format(config["architecture"]["id"]))
-
+    logfile.write("[Tio] acc {}".format(best_acc))
+    logfile.flush()
     logfile.close()
 
 

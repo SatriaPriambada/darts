@@ -48,7 +48,7 @@ def draw_acc_subplot(df, subplot, color):
 
 def update_df_acc(file_name, device, path):
     df = pd.read_csv(file_name)
-    folder_path = "~/ray_results/train_cifar_simontam/train_mcts_cifar_13_04_2020"
+    folder_path = "~/ray_results/simontam/train_mnist_skin_cancer"
     folder_path = os.path.expanduser(folder_path)
     # print("folder_path: {}".format(folder_path))
     acc = 0
@@ -71,7 +71,7 @@ def update_df_acc(file_name, device, path):
             df.loc[row_id, ["acc"]] = acc
             # print(df.loc[df.index == row_id])
     nm = file_name.split(".")
-    df.to_csv(Path(nm[0] + "_with_acc.csv"), index=None)
+    df.to_csv(Path(nm[0] + "_skin_cancer_2_mcts_with_acc.csv"), index=None)
 
 
 if __name__ == "__main__":
@@ -85,7 +85,11 @@ if __name__ == "__main__":
         help="start system with test config",
     )
     parser.add_argument(
-        "-d", "--device", type=str, default="gpu-v100", help="device used for profile"
+        "-d",
+        "--device",
+        type=str,
+        default="gpu-rtx2080",
+        help="device used for profile",
     )
     parser.add_argument(
         "-p",

@@ -102,3 +102,26 @@ class TrainHeteroNetCIFAR(tune.Trainable):
 
     def _restore(self, checkpoint_path):
         self.model.load_state_dict(torch.load(checkpoint_path))
+
+
+def convert_str_to_ImageNet_Network(
+    name,
+    selected_layers,
+    cell_layers,
+    none_layers,
+    skip_conn,
+    init_channels,
+    layers,
+    auxiliary,
+    n_classes,
+):
+
+    return {
+        "name": name,
+        "cell_layers": cell_layers,
+        "none_layers": none_layers,
+        "skip_conn": skip_conn,
+        "model": HeterogenousNetworkImageNet(
+            init_channels, n_classes, layers, auxiliary, selected_layers
+        ),
+    }

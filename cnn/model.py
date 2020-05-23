@@ -344,15 +344,9 @@ class HeterogenousNetworkMNIST(nn.Module):
 class HeterogenousNetworkImageNet(nn.Module):
     def __init__(self, C, num_classes, layers, auxiliary, genotypes, device="cuda"):
         super(HeterogenousNetworkImageNet, self).__init__()
-        valid_layers = 0
-        none_layers_idx = set(
-            [i for i in range(len(genotypes)) if genotypes[i] == "none"]
-        )
-        if layers <= len(genotypes):
-            valid_layers = layers - len(none_layers_idx)
-        else:
-            valid_layers = len(genotypes) - len(none_layers_idx)
-        assert valid_layers > 0
+        valid_genotypes = list(filter(lambda a: a != "none", genotypes))
+        valid_layers = len(valid_genotypes)
+        assert valid_layers >= 0
         self._layers = valid_layers
         self._auxiliary = auxiliary
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -375,43 +369,32 @@ class HeterogenousNetworkImageNet(nn.Module):
 
         self.cells = nn.ModuleList()
         reduction_prev = True
-        logfile = open("log_model_build.txt", "w")
-        logfile.write("[Tio] log for architecture total layers {}".format(self._layers))
 
-        for i in range(self._layers):
-            if i in [layers // 3, 2 * layers // 3]:
+        for i in range(len(valid_genotypes)):
+            if i in [valid_layers // 3, 2 * valid_layers // 3]:
                 C_curr *= 2
                 reduction = True
             else:
                 reduction = False
 
-            if i in none_layers_idx:
-                pass
-                logfile.write("pass non layer: {}".format(i))
-            else:
-                cell = Cell(
-                    eval(genotypes[i]),
-                    C_prev_prev,
-                    C_prev,
-                    C_curr,
-                    reduction,
-                    reduction_prev,
-                )
-                reduction_prev = reduction
-                self.cells += [cell]
+            cell = Cell(
+                eval(valid_genotypes[i]),
+                C_prev_prev,
+                C_prev,
+                C_curr,
+                reduction,
+                reduction_prev,
+            )
+            reduction_prev = reduction
+            self.cells += [cell]
 
             C_prev_prev, C_prev = C_prev, 4 * C_curr
-            if i == 2 * layers // 3:
+            if i == 2 * valid_layers // 3:
                 C_to_auxiliary = C_prev
 
         if auxiliary:
             self.auxiliary_head = AuxiliaryHeadImageNet(C_prev, num_classes)
         self.global_pooling = nn.AvgPool2d(7)
-        logfile.write("last cprev: {}".format(C_prev))
-        if self._layers < 10:
-            C_prev *= 16
-        elif self._layers < 20:
-            C_prev *= 4
         self.classifier = nn.Linear(C_prev, num_classes)
 
     def forward(self, input):
@@ -426,4 +409,3 @@ class HeterogenousNetworkImageNet(nn.Module):
         out = self.global_pooling(s1)
         logits = self.classifier(out.view(out.size(0), -1))
         return logits, logits_aux
-

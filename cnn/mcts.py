@@ -7,7 +7,7 @@ import pandas as pd
 import trainer_cifar
 import argparse
 from utils import Namespace
-from model import HeterogenousNetworkCIFAR
+from model import HeterogenousNetworkCIFAR, HeterogenousNetworkImageNet
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -35,8 +35,10 @@ In particular there are two models of best child that one can use
 SCALAR = 1 / math.sqrt(2.0)
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
-INPUT_SIZE = 32
+CIFAR_INPUT_SIZE = 32
 CIFAR_CLASSES = 10
+IMAGENET_INPUT_SIZE = 224
+IMAGENET_CLASSES = 1000
 
 
 def gaussian(X, mu, cov):
@@ -50,7 +52,7 @@ def gaussian(X, mu, cov):
 
 
 class State:
-    MOVES = pd.read_csv("generated_micro_cpu_center.csv")["genotype"].to_list()
+    MOVES = pd.read_csv("generated_micro_cuda:0_cpu_center.csv")["genotype"].to_list()
     MOVES.append("none")
     num_moves = len(MOVES)
 
@@ -62,6 +64,7 @@ class State:
         n_family,
         target_latency,
         max_layers,
+        dataset_name,
         config,
     ):
         # print("MOVES {}".format(self.MOVES))
@@ -73,6 +76,7 @@ class State:
         self.lat = 1000  # current state lat 99th in ms
         self.target_latency = target_latency  # array of target lat in ms
         self.max_layers = max_layers
+        self.dataset_name = dataset_name  # cifar10 or imagenet
         self.config = config
         # print("__init called __ {}".format(self.moves))
 
@@ -85,8 +89,13 @@ class State:
             med_idx.append(rand_idx)
             nextmove.append(self.MOVES[rand_idx])
 
-        self.moves = self.moves + nextmove
-        self.selected_med_idx = self.selected_med_idx + med_idx
+        if len(self.moves) + len(nextmove) < self.max_layers:
+            self.moves = self.moves + nextmove
+            self.selected_med_idx = self.selected_med_idx + med_idx
+        else:
+            remaining_choice = self.max_layers - len(self.moves)
+            self.moves = self.moves + nextmove[:remaining_choice]
+            self.selected_med_idx = self.selected_med_idx + med_idx[:remaining_choice]
 
         return State(
             self.moves,
@@ -95,6 +104,7 @@ class State:
             self.n_family,
             self.target_latency,
             self.max_layers,
+            self.dataset_name,
             self.config,
         )
 
@@ -104,60 +114,44 @@ class State:
         return False
 
     def get_acc_latency(self):
-        # For now Uses CIFAR as proxy to get acc and lat
-        # Might add ImageNet later
-
-        model = HeterogenousNetworkCIFAR(
-            self.config["architecture"]["init_channels"],
-            self.config["architecture"]["num_classes"],
-            self.config["architecture"]["layers"],
-            self.config["architecture"]["auxiliary"],
-            self.moves,
-        )
-        model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
-        model.to(self.config["device"])
-        dummy_input = torch.zeros(
-            INPUT_BATCH, INPUT_CHANNEL, INPUT_SIZE, INPUT_SIZE
-        ).to(self.config["device"])
-        mean_lat, latencies = latency_profiler.test_latency(
-            model, dummy_input, self.config["device"]
-        )
-
-        # batch_size = 32
-        # workers = 4
-        # args = Namespace(
-        # 	cutout=False,
-        # 	cutout_length=16
-        # )
-        # train_loader, test_loader = trainer_cifar.get_data_loaders(batch_size, workers, args)
-        # optimizer = optim.SGD(
-        # 	model.parameters(), lr=self.config["lr"], momentum=self.config["momentum"])
-
-        # Run this accuracy profile for 1 epoch to get latency and estimate of acc
-        # total_epoch = 1
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, float(total_epoch))
-        # best_acc = 0
-        # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # criterion = nn.CrossEntropyLoss()
-        # if torch.cuda.is_available():
-        # 	criterion = criterion.cuda()
-        # # logfile = open("log.txt","w")
-        # for epoch in range(total_epoch):
-        # 	model.drop_path_prob = self.config["architecture"]["drop_path_prob"] * epoch / total_epoch
-        # 	# Train model to get accuracy.
-        # 	train_acc, _ = trainer_cifar.torch_1_v_4_train(epoch, model, optimizer, criterion, train_loader,
-        # 		logfile, device, self.config["architecture"]["auxiliary"])
-        # 	scheduler.step()
-
-        # 	# Obtain validation accuracy.
-        # 	acc, _ = trainer_cifar.torch_1_v_4_test(epoch, model, criterion, test_loader, logfile, device)
-        # 	# since this MCTS form only do training to get an estimation of accuracy we
-        # 	# there's no need to save checkpoint or best model
+        latencies = []
+        if self.dataset_name == "cifar10":
+            model = HeterogenousNetworkCIFAR(
+                self.config["architecture"]["init_channels"],
+                self.config["architecture"]["num_classes"],
+                self.config["architecture"]["layers"],
+                self.config["architecture"]["auxiliary"],
+                self.moves,
+            )
+            model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
+            model.to(self.config["device"])
+            dummy_input = torch.zeros(
+                INPUT_BATCH, INPUT_CHANNEL, CIFAR_INPUT_SIZE, CIFAR_INPUT_SIZE
+            ).to(self.config["device"])
+            mean_lat, latencies = latency_profiler.test_latency(
+                model, dummy_input, self.config["device"]
+            )
+        elif self.dataset_name == "imagenet":
+            model = HeterogenousNetworkImageNet(
+                self.config["architecture"]["init_channels"],
+                self.config["architecture"]["num_classes"],
+                self.config["architecture"]["layers"],
+                self.config["architecture"]["auxiliary"],
+                self.moves,
+            )
+            model.drop_path_prob = self.config["architecture"]["drop_path_prob"]
+            model.to(self.config["device"])
+            dummy_input = torch.zeros(
+                INPUT_BATCH, INPUT_CHANNEL, IMAGENET_INPUT_SIZE, IMAGENET_INPUT_SIZE
+            ).to(self.config["device"])
+            mean_lat, latencies = latency_profiler.test_latency(
+                model, dummy_input, self.config["device"]
+            )
         train_result = {"acc": 0, "lat": latencies[98]}
         print("train_result ", train_result)
         return train_result
 
-    def reward(self):
+    def reward(self, num_layers):
         w = 0.5
         train_result = self.get_acc_latency()
         self.acc = train_result["acc"]
@@ -168,7 +162,11 @@ class State:
             if self.lat < strata:
                 lat_part = lat_part * abs((1 - (self.lat / strata))) ** (1 - w)
         acc_part = abs((1 - (self.acc / 100))) ** w
-        r = 1 - (acc_part * lat_part)
+        r = (
+            1
+            - (acc_part * lat_part)
+            + (1 / (1 + math.exp(-(num_layers - (self.max_layers - 10)))))
+        )
         return r
 
 
@@ -265,6 +263,7 @@ def BESTCHILD(node, scalar):
     if not node.children:
         return node
     else:
+        total_children = len(node.children)
         for c in node.children:
             exploit = c.reward / c.visits
             explore = math.sqrt(2.0 * math.log(node.visits) / float(c.visits))
@@ -309,9 +308,10 @@ def BESTCHILDREN(node, scalar, bestchildren):
 
 
 def DEFAULTPOLICY(state):
+    tree_length = len(state.moves)
     while state.terminal() == False:
         state = state.next_state()
-    return state.reward(), state.get_acc_latency()
+    return state.reward(tree_length), state.get_acc_latency()
 
 
 def BACKUP(node, reward, latest_latency, latest_acc):

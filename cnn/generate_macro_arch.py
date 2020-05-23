@@ -30,8 +30,8 @@ log_format = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
-load_filename = "generated_micro"
-filename = "t8_generated_cifar_macro_mcts_v7_sim_100"
+load_filename = "generated_micro_cuda:0"
+filename = "t9_generated_cifar_macro_mcts_v9_sim_100"
 NFAMILY = 8
 CIFAR_CLASSES = 10
 NUM_SAMPLE = 125
@@ -65,7 +65,7 @@ def generate_macro(dataset_name,
   micro_genotypes = pd.read_csv(load_filename + '_cpu_center.csv'.format(str(device)))
   #print(micro_genotypes) 
   sampled_architecture = macro_network.sample_mcts_architecture(dataset_name, NUM_SAMPLE, 
-    micro_genotypes, init_channels, layers, n_family, auxiliary, drop_path_prob)
+    micro_genotypes, init_channels, layers, n_family, CLUSTERS, auxiliary, drop_path_prob)
   df_arch = pd.DataFrame(sampled_architecture)
   df_arch = df_arch.drop(columns=['model'])
   print(df_arch)

@@ -23,9 +23,9 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import argparse
 
-filename = "arch_profile_mcts_v7"
+filename = "arch_profile_cifar100_cloud"
 OPORTUNITY_GAP_ARCHITECTURE = (
-    "t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers.csv"
+    "arch_op_gap_cifar100.csv"
 )
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         test_data, batch_size=256, shuffle=True, num_workers=4
     )
 
-    df_op_gap = pd.read_csv("mcts_generated/" + OPORTUNITY_GAP_ARCHITECTURE)
+    df_op_gap = pd.read_csv("op_gap_cloud/" + OPORTUNITY_GAP_ARCHITECTURE)
     sampled_architecture = connvert_df_to_list_arch(
         df_op_gap, init_channels, layers, auxiliary, CIFAR_CLASSES
     )
