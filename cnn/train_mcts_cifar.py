@@ -85,7 +85,11 @@ def main():
     logfile.write("[Tio] log for architecture id {}".format(model_name))
     best_acc = 0
     device = torch.device("cuda")
-    for epoch in range(args.epochs):
+    if (args.resume) {
+        print("Load model")
+        model = torch.load("checkpoint_mcts_cifar.pth")
+    }
+    for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
         model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
         # Train model to get accuracy.
@@ -157,10 +161,10 @@ def torch_1_v_4_train(
         objs.update(loss.item(), n)
         top1.update(prec1.item(), n)
         top5.update(prec5.item(), n)
-        logfile.write(
-            "train {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
-        )
-        logfile.flush()
+        # logfile.write(
+        #     "train {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+        # )
+        # logfile.flush()
 
     return top1.avg, objs.avg
 
@@ -189,10 +193,10 @@ def torch_1_v_4_test(
             top1.update(prec1.item(), n)
             top5.update(prec5.item(), n)
 
-            logfile.write(
-                "valid {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
-            )
-            logfile.flush()
+            # logfile.write(
+            #     "valid {} {} {} {}".format(batch_idx, objs.avg, top1.avg, top5.avg)
+            # )
+            # logfile.flush()
     return top1.avg, objs.avg
 
 
@@ -211,6 +215,9 @@ if __name__ == "__main__":
         "--report_freq", type=float, default=50, help="report frequency"
     )
     parser.add_argument("--gpu", type=int, default=0, help="gpu device id")
+    parser.add_argument(
+        "--start_epoch", type=int, default=0, help="num of starting training epochs"
+    )
     parser.add_argument(
         "--epochs", type=int, default=600, help="num of training epochs"
     )
@@ -240,6 +247,12 @@ if __name__ == "__main__":
         "--arch", type=str, default="DARTS", help="which architecture to use"
     )
     parser.add_argument("--grad_clip", type=float, default=5, help="gradient clipping")
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        default=False,
+        help="use resume training from previous model",
+    )
     args = parser.parse_args()
 
     args.save = "eval-{}-{}".format(args.save, time.strftime("%Y%m%d-%H%M%S"))
