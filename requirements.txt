@@ -1,0 +1,13 @@
+ray==0.8.1
+mlflow
+seaborn
+thop
+pandas
+pillow<7
+tensorflow
+tensorboardX
+asyncio
+async-timeout
+sklearn
+tqdm
+https://github.com/scikit-learn-contrib/scikit-learn-extra/archive/master.zip
