@@ -1,0 +1,1453 @@
+[Tio] log for architecture id Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV2_1.0', 2), ('skip_connect', 1), ('sep_conv_3x3', 2), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 4), ('mobilenetV2_1.0', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('dil_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('max_pool_3x3', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('mobilenetV3_1.0_3x3_Hswish', 2), ('sep_conv_5x5', 0)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_3x3', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('dil_conv_5x5', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('avg_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('sep_conv_5x5', 2)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hswish', 0), ('max_pool_3x3', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('mobilenetV2_1.0', 3), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('skip_connect', 2)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hswish', 1), ('dil_conv_5x5', 1), ('max_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hswish', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 0), ('dil_conv_3x3', 1)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('skip_connect', 0), ('avg_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 1), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 2), ('dil_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 1)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV2_1.0', 2), ('skip_connect', 1), ('sep_conv_3x3', 2), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 4), ('mobilenetV2_1.0', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('dil_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('max_pool_3x3', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('mobilenetV3_1.0_3x3_Hswish', 2), ('sep_conv_5x5', 0)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_3x3', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('dil_conv_5x5', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('avg_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('sep_conv_5x5', 2)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hswish', 0), ('max_pool_3x3', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('mobilenetV2_1.0', 3), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('skip_connect', 2)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hswish_SE', 0), ('mobilenetV2_1.4', 0), ('dil_conv_3x3', 0), ('avg_pool_3x3', 2), ('avg_pool_3x3', 3), ('mobilenetV3_1.0_5x5_Hswish', 3), ('max_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 2)], normal_concat=range(2, 6), reduce=[('sep_conv_7x7', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('max_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 2), ('mobilenetV3_1.0_3x3_Hsigmoid', 2), ('mobilenetV2_1.4', 4), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('sep_conv_5x5', 1), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('sep_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('sep_conv_5x5', 3), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 2), ('mobilenetV3_1.0_3x3_Hsigmoid', 0)], normal_concat=range(2, 6), reduce=[('avg_pool_3x3', 0), ('dil_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 2), ('mobilenetV3_1.0_5x5_Hswish', 0), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('sep_conv_7x7', 1)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_7x7', 0), ('skip_connect', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('sep_conv_7x7', 2), ('mobilenetV3_1.0_5x5_Hswish', 2), ('avg_pool_3x3', 3), ('mobilenetV3_1.0_5x5_Hswish', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 1), ('sep_conv_7x7', 3), ('sep_conv_3x3', 3), ('sep_conv_7x7', 3), ('mobilenetV3_1.0_5x5_Hsigmoid', 1)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV2_1.0', 2), ('skip_connect', 1), ('sep_conv_3x3', 2), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 4), ('mobilenetV2_1.0', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('dil_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('max_pool_3x3', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('mobilenetV3_1.0_3x3_Hswish', 2), ('sep_conv_5x5', 0)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hswish', 1), ('dil_conv_5x5', 1), ('max_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hswish', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 0), ('dil_conv_3x3', 1)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('skip_connect', 0), ('avg_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 1), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 2), ('dil_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 1)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_3x3', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('dil_conv_5x5', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('avg_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('sep_conv_5x5', 2)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hswish', 0), ('max_pool_3x3', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('mobilenetV2_1.0', 3), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('skip_connect', 2)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hswish_SE', 0), ('mobilenetV2_1.4', 0), ('dil_conv_3x3', 0), ('avg_pool_3x3', 2), ('avg_pool_3x3', 3), ('mobilenetV3_1.0_5x5_Hswish', 3), ('max_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 2)], normal_concat=range(2, 6), reduce=[('sep_conv_7x7', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('max_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 2), ('mobilenetV3_1.0_3x3_Hsigmoid', 2), ('mobilenetV2_1.4', 4), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0)], reduce_concat=range(2, 6));Genotype(normal=[('dil_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV2_1.4', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 0), ('mobilenetV2_1.0', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('sep_conv_7x7', 1)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hsigmoid', 0), ('mobilenetV3_1.0_3x3_Hswish', 1), ('mobilenetV2_1.4', 0), ('sep_conv_7x7', 0), ('mobilenetV3_1.0_5x5_Hswish_SE', 0), ('dil_conv_3x3', 2), ('max_pool_3x3', 1), ('sep_conv_5x5', 4)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_3x3', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('dil_conv_5x5', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('avg_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('sep_conv_5x5', 2)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hswish', 0), ('max_pool_3x3', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('mobilenetV2_1.0', 3), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('skip_connect', 2)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_3x3', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('dil_conv_5x5', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('avg_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('sep_conv_5x5', 2)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hswish', 0), ('max_pool_3x3', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('mobilenetV2_1.0', 3), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 2), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('skip_connect', 2)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('mobilenetV3_1.0_3x3_Hswish', 0), ('sep_conv_3x3', 2), ('sep_conv_7x7', 1), ('dil_conv_5x5', 1), ('mobilenetV3_1.0_3x3_Hswish', 3), ('sep_conv_5x5', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 1), ('max_pool_3x3', 1), ('dil_conv_5x5', 1), ('avg_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hswish', 1), ('dil_conv_5x5', 1), ('max_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hswish', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 0), ('dil_conv_3x3', 1)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('skip_connect', 0), ('avg_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 1), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 2), ('dil_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 1)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV2_1.0', 2), ('skip_connect', 1), ('sep_conv_3x3', 2), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 4), ('mobilenetV2_1.0', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('dil_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('max_pool_3x3', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('mobilenetV3_1.0_3x3_Hswish', 2), ('sep_conv_5x5', 0)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hswish', 1), ('dil_conv_5x5', 1), ('max_pool_3x3', 0), ('mobilenetV2_1.0', 2), ('mobilenetV3_1.0_5x5_Hswish', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 0), ('dil_conv_3x3', 1)], normal_concat=range(2, 6), reduce=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('skip_connect', 0), ('avg_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 1), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 2), ('dil_conv_5x5', 0), ('sep_conv_5x5', 2), ('dil_conv_3x3', 1)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('sep_conv_5x5', 1), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('sep_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('sep_conv_5x5', 3), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 2), ('mobilenetV3_1.0_3x3_Hsigmoid', 0)], normal_concat=range(2, 6), reduce=[('avg_pool_3x3', 0), ('dil_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 2), ('mobilenetV3_1.0_5x5_Hswish', 0), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('sep_conv_7x7', 1)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV2_1.0', 2), ('skip_connect', 1), ('sep_conv_3x3', 2), ('sep_conv_3x3', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 4), ('mobilenetV2_1.0', 4)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('dil_conv_5x5', 0), ('mobilenetV3_1.0_5x5_Hsigmoid_SE', 1), ('max_pool_3x3', 0), ('mobilenetV3_1.0_3x3_Hsigmoid', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 3), ('mobilenetV3_1.0_3x3_Hswish', 2), ('sep_conv_5x5', 0)], reduce_concat=range(2, 6));Genotype(normal=[('mobilenetV3_1.0_5x5_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hsigmoid', 0), ('mobilenetV3_1.0_3x3_Hswish', 0), ('sep_conv_3x3', 2), ('sep_conv_7x7', 1), ('dil_conv_5x5', 1), ('mobilenetV3_1.0_3x3_Hswish', 3), ('sep_conv_5x5', 3)], normal_concat=range(2, 6), reduce=[('sep_conv_3x3', 1), ('mobilenetV3_1.0_5x5_Hswish_SE', 1), ('max_pool_3x3', 1), ('dil_conv_5x5', 1), ('avg_pool_3x3', 1), ('mobilenetV3_1.0_5x5_Hsigmoid', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('sep_conv_5x5', 3)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_7x7', 0), ('skip_connect', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('sep_conv_7x7', 2), ('mobilenetV3_1.0_5x5_Hswish', 2), ('avg_pool_3x3', 3), ('mobilenetV3_1.0_5x5_Hswish', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 1), ('sep_conv_7x7', 3), ('sep_conv_3x3', 3), ('sep_conv_7x7', 3), ('mobilenetV3_1.0_5x5_Hsigmoid', 1)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_7x7', 0), ('skip_connect', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('sep_conv_7x7', 2), ('mobilenetV3_1.0_5x5_Hswish', 2), ('avg_pool_3x3', 3), ('mobilenetV3_1.0_5x5_Hswish', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 1), ('sep_conv_7x7', 3), ('sep_conv_3x3', 3), ('sep_conv_7x7', 3), ('mobilenetV3_1.0_5x5_Hsigmoid', 1)], reduce_concat=range(2, 6));Genotype(normal=[('sep_conv_7x7', 0), ('skip_connect', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 0), ('mobilenetV3_1.0_5x5_Hswish', 2), ('sep_conv_7x7', 2), ('mobilenetV3_1.0_5x5_Hswish', 2), ('avg_pool_3x3', 3), ('mobilenetV3_1.0_5x5_Hswish', 0)], normal_concat=range(2, 6), reduce=[('max_pool_3x3', 1), ('mobilenetV3_1.0_3x3_Hsigmoid_SE', 1), ('mobilenetV3_1.0_5x5_Hswish', 1), ('mobilenetV3_1.0_3x3_Hswish_SE', 1), ('sep_conv_7x7', 3), ('sep_conv_3x3', 3), ('sep_conv_7x7', 3), ('mobilenetV3_1.0_5x5_Hsigmoid', 1)], reduce_concat=range(2, 6))start training epoch 116 
+start test epoch 116 
+start test
+[Tio] epoch 116 acc 92.4799973876953 loss 0.15310318201184273[Tio] find new best model epoch 116 acc 92.4799973876953 loss 0.15310318201184273start training epoch 117 
+start test epoch 117 
+start test
+[Tio] epoch 117 acc 92.41999731445313 loss 0.1518571516442299start training epoch 118 
+start test epoch 118 
+start test
+[Tio] epoch 118 acc 92.46999741210938 loss 0.15102347364425658start training epoch 119 
+start test epoch 119 
+start test
+[Tio] epoch 119 acc 92.42999736328125 loss 0.15377658029317856start training epoch 120 
+start test epoch 120 
+start test
+[Tio] epoch 120 acc 92.55999733886719 loss 0.15370003299713134[Tio] find new best model epoch 120 acc 92.55999733886719 loss 0.15370003299713134start training epoch 121 
+start test epoch 121 
+start test
+[Tio] epoch 121 acc 92.50999738769531 loss 0.15432339323282243start training epoch 122 
+start test epoch 122 
+start test
+[Tio] epoch 122 acc 92.40999741210938 loss 0.1553985218858719start training epoch 123 
+start test epoch 123 
+start test
+[Tio] epoch 123 acc 92.52999777832031 loss 0.1554170153236389start training epoch 124 
+start test epoch 124 
+start test
+[Tio] epoch 124 acc 92.52999741210938 loss 0.15270108404397964start training epoch 125 
+start test epoch 125 
+start test
+[Tio] epoch 125 acc 92.439997265625 loss 0.1559587948513031start training epoch 126 
+start test epoch 126 
+start test
+[Tio] epoch 126 acc 92.52999733886719 loss 0.1571281381869316start training epoch 127 
+start test epoch 127 
+start test
+[Tio] epoch 127 acc 92.44999716796875 loss 0.1554379050195217start training epoch 128 
+start test epoch 128 
+start test
+[Tio] epoch 128 acc 92.41999775390624 loss 0.15862989877223968start training epoch 129 
+start test epoch 129 
+start test
+[Tio] epoch 129 acc 92.32999729003906 loss 0.15881992458581926start training epoch 130 
+start test epoch 130 
+start test
+[Tio] epoch 130 acc 92.50999750976563 loss 0.16169392663478852start training epoch 131 
+start test epoch 131 
+start test
+[Tio] epoch 131 acc 92.50999724121094 loss 0.16178351652860642start training epoch 132 
+start test epoch 132 
+start test
+[Tio] epoch 132 acc 92.4799974609375 loss 0.15633939422249793start training epoch 133 
+start test epoch 133 
+start test
+[Tio] epoch 133 acc 92.41999736328125 loss 0.15657630062818528start training epoch 134 
+start test epoch 134 
+start test
+[Tio] epoch 134 acc 92.39999729003907 loss 0.15958750006318093start training epoch 135 
+start test epoch 135 
+start test
+[Tio] epoch 135 acc 92.39999729003907 loss 0.1620319515299797start training epoch 136 
+start test epoch 136 
+start test
+[Tio] epoch 136 acc 92.45999736328125 loss 0.1630468767309189start training epoch 137 
+start test epoch 137 
+start test
+[Tio] epoch 137 acc 92.44999729003906 loss 0.1594244128346443start training epoch 138 
+start test epoch 138 
+start test
+[Tio] epoch 138 acc 92.43999731445312 loss 0.1605336033511162start training epoch 139 
+start test epoch 139 
+start test
+[Tio] epoch 139 acc 92.50999721679688 loss 0.1643160687291622start training epoch 140 
+start test epoch 140 
+start test
+[Tio] epoch 140 acc 92.43999748535157 loss 0.1674396628856659start training epoch 141 
+start test epoch 141 
+start test
+[Tio] epoch 141 acc 92.41999716796875 loss 0.16566115818738938start training epoch 142 
+start test epoch 142 
+start test
+[Tio] epoch 142 acc 92.57999765625 loss 0.16431959747791292[Tio] find new best model epoch 142 acc 92.57999765625 loss 0.16431959747791292start training epoch 143 
+start test epoch 143 
+start test
+[Tio] epoch 143 acc 92.56999760742187 loss 0.1642464410996437start training epoch 144 
+start test epoch 144 
+start test
+[Tio] epoch 144 acc 92.31999741210937 loss 0.17038183680057525start training epoch 145 
+start test epoch 145 
+start test
+[Tio] epoch 145 acc 92.52999755859375 loss 0.16844510075330735start training epoch 146 
+start test epoch 146 
+start test
+[Tio] epoch 146 acc 92.47999753417969 loss 0.1636720455479622start training epoch 147 
+start test epoch 147 
+start test
+[Tio] epoch 147 acc 92.42999719238281 loss 0.16225418880701065start training epoch 148 
+start test epoch 148 
+start test
+[Tio] epoch 148 acc 92.48999736328125 loss 0.17034007996559142start training epoch 149 
+start test epoch 149 
+start test
+[Tio] epoch 149 acc 92.38999738769532 loss 0.17186857229232788start training epoch 150 
+start test epoch 150 
+start test
+[Tio] epoch 150 acc 92.43999733886719 loss 0.1699022906422615start training epoch 151 
+start test epoch 151 
+start test
+[Tio] epoch 151 acc 92.4499974609375 loss 0.17129036412477494start training epoch 152 
+start test epoch 152 
+start test
+[Tio] epoch 152 acc 92.39999729003907 loss 0.16933424451589585start training epoch 153 
+start test epoch 153 
+start test
+[Tio] epoch 153 acc 92.46999755859375 loss 0.17205557057857512start training epoch 154 
+start test epoch 154 
+start test
+[Tio] epoch 154 acc 92.38999716796874 loss 0.17499182507753372start training epoch 155 
+start test epoch 155 
+start test
+[Tio] epoch 155 acc 92.45999736328125 loss 0.17126842851638793start training epoch 156 
+start test epoch 156 
+start test
+[Tio] epoch 156 acc 92.51999721679688 loss 0.17557312669277192start training epoch 157 
+start test epoch 157 
+start test
+[Tio] epoch 157 acc 92.50999738769531 loss 0.1771180307173729start training epoch 158 
+start test epoch 158 
+start test
+[Tio] epoch 158 acc 92.53999731445313 loss 0.173066755900383start training epoch 159 
+start test epoch 159 
+start test
+[Tio] epoch 159 acc 92.37999741210938 loss 0.17376562913179397start training epoch 160 
+start test epoch 160 
+start test
+[Tio] epoch 160 acc 92.39999750976563 loss 0.1717596808886528start training epoch 161 
+start test epoch 161 
+start test
+[Tio] epoch 161 acc 92.51999765625 loss 0.1744618366718292start training epoch 162 
+start test epoch 162 
+start test
+[Tio] epoch 162 acc 92.36999721679688 loss 0.1767897531938553start training epoch 163 
+start test epoch 163 
+start test
+[Tio] epoch 163 acc 92.25999741210937 loss 0.1770804140019417start training epoch 164 
+start test epoch 164 
+start test
+[Tio] epoch 164 acc 92.43999724121093 loss 0.17743295850515364start training epoch 165 
+start test epoch 165 
+start test
+[Tio] epoch 165 acc 92.41999731445313 loss 0.17831910378694535start training epoch 166 
+start test epoch 166 
+start test
+[Tio] epoch 166 acc 92.53999738769531 loss 0.17958087416410445start training epoch 167 
+start test epoch 167 
+start test
+[Tio] epoch 167 acc 92.409997265625 loss 0.17889692260742188start training epoch 168 
+start test epoch 168 
+start test
+[Tio] epoch 168 acc 92.41999738769532 loss 0.18081853610992432start training epoch 169 
+start test epoch 169 
+start test
+[Tio] epoch 169 acc 92.53999731445313 loss 0.1803950310921669start training epoch 170 
+start test epoch 170 
+start test
+[Tio] epoch 170 acc 92.43999777832032 loss 0.1824557173347473start training epoch 171 
+start test epoch 171 
+start test
+[Tio] epoch 171 acc 92.53999743652344 loss 0.18319144379854202start training epoch 172 
+start test epoch 172 
+start test
+[Tio] epoch 172 acc 92.41999760742188 loss 0.18533345924854278start training epoch 173 
+start test epoch 173 
+start test
+[Tio] epoch 173 acc 92.34999748535157 loss 0.1868646191596985start training epoch 174 
+start test epoch 174 
+start test
+[Tio] epoch 174 acc 92.31999733886718 loss 0.18311623114109038start training epoch 175 
+start test epoch 175 
+start test
+[Tio] epoch 175 acc 92.32999768066406 loss 0.18681828468322753start training epoch 176 
+start test epoch 176 
+start test
+[Tio] epoch 176 acc 92.5099974609375 loss 0.18424392976284026start training epoch 177 
+start test epoch 177 
+start test
+[Tio] epoch 177 acc 92.53999709472656 loss 0.18936409293174744start training epoch 178 
+start test epoch 178 
+start test
+[Tio] epoch 178 acc 92.48999743652344 loss 0.18577628498792648start training epoch 179 
+start test epoch 179 
+start test
+[Tio] epoch 179 acc 92.5099974609375 loss 0.18836259351730347start training epoch 180 
+start test epoch 180 
+start test
+[Tio] epoch 180 acc 92.50999731445313 loss 0.18908129132986068start training epoch 181 
+start test epoch 181 
+start test
+[Tio] epoch 181 acc 92.36999758300782 loss 0.19300126767873765start training epoch 182 
+start test epoch 182 
+start test
+[Tio] epoch 182 acc 92.45999721679688 loss 0.18752877903461457start training epoch 183 
+start test epoch 183 
+start test
+[Tio] epoch 183 acc 92.49999733886719 loss 0.18932096050977706start training epoch 184 
+start test epoch 184 
+start test
+[Tio] epoch 184 acc 92.53999731445313 loss 0.19098899087190627start training epoch 185 
+start test epoch 185 
+start test
+[Tio] epoch 185 acc 92.52999741210938 loss 0.19006774537682533start training epoch 186 
+start test epoch 186 
+start test
+[Tio] epoch 186 acc 92.42999721679688 loss 0.19079361346960066start training epoch 187 
+start test epoch 187 
+start test
+[Tio] epoch 187 acc 92.5699974609375 loss 0.1910169658613205start training epoch 188 
+start test epoch 188 
+start test
+[Tio] epoch 188 acc 92.46999748535156 loss 0.18681073455572128start training epoch 189 
+start test epoch 189 
+start test
+[Tio] epoch 189 acc 92.48999721679688 loss 0.19373214509248735start training epoch 190 
+start test epoch 190 
+start test
+[Tio] epoch 190 acc 92.45999741210937 loss 0.19699013131141663start training epoch 191 
+start test epoch 191 
+start test
+[Tio] epoch 191 acc 92.42999755859375 loss 0.1976216659593582start training epoch 192 
+start test epoch 192 
+start test
+[Tio] epoch 192 acc 92.55999741210937 loss 0.19738890973567963start training epoch 193 
+start test epoch 193 
+start test
+[Tio] epoch 193 acc 92.5699974609375 loss 0.20165007254123687start training epoch 194 
+start test epoch 194 
+start test
+[Tio] epoch 194 acc 92.51999748535157 loss 0.19919205060243605start training epoch 195 
+start test epoch 195 
+start test
+[Tio] epoch 195 acc 92.34999731445312 loss 0.19961364312171936start training epoch 196 
+start test epoch 196 
+start test
+[Tio] epoch 196 acc 92.51999736328125 loss 0.201900215613842start training epoch 197 
+start test epoch 197 
+start test
+[Tio] epoch 197 acc 92.39999750976563 loss 0.19981925205230713start training epoch 198 
+start test epoch 198 
+start test
+[Tio] epoch 198 acc 92.36999721679688 loss 0.19908542712450028start training epoch 199 
+start test epoch 199 
+start test
+[Tio] epoch 199 acc 92.53999760742188 loss 0.19858238168001174start training epoch 200 
+start test epoch 200 
+start test
+[Tio] epoch 200 acc 92.34999763183593 loss 0.20225705764055252start training epoch 201 
+start test epoch 201 
+start test
+[Tio] epoch 201 acc 92.3899974609375 loss 0.20591508334636688start training epoch 202 
+start test epoch 202 
+start test
+[Tio] epoch 202 acc 92.42999721679688 loss 0.20369949467658996start training epoch 203 
+start test epoch 203 
+start test
+[Tio] epoch 203 acc 92.51999765625 loss 0.20890876341104508start training epoch 204 
+start test epoch 204 
+start test
+[Tio] epoch 204 acc 92.48999729003906 loss 0.20531442438840866start training epoch 205 
+start test epoch 205 
+start test
+[Tio] epoch 205 acc 92.43999755859375 loss 0.2069815873026848start training epoch 206 
+start test epoch 206 
+start test
+[Tio] epoch 206 acc 92.53999724121094 loss 0.20889680172920227start training epoch 207 
+start test epoch 207 
+start test
+[Tio] epoch 207 acc 92.56999724121094 loss 0.20936068055152893start training epoch 208 
+start test epoch 208 
+start test
+[Tio] epoch 208 acc 92.54999714355469 loss 0.20575986570835114start training epoch 209 
+start test epoch 209 
+start test
+[Tio] epoch 209 acc 92.41999721679687 loss 0.20772725890159607start training epoch 210 
+start test epoch 210 
+start test
+[Tio] epoch 210 acc 92.46999741210938 loss 0.21159671268939972start training epoch 211 
+start test epoch 211 
+start test
+[Tio] epoch 211 acc 92.50999760742188 loss 0.21137167273044585start training epoch 212 
+start test epoch 212 
+start test
+[Tio] epoch 212 acc 92.57999758300781 loss 0.20947666341781615start training epoch 213 
+start test epoch 213 
+start test
+[Tio] epoch 213 acc 92.35999729003906 loss 0.20785396171092987start training epoch 214 
+start test epoch 214 
+start test
+[Tio] epoch 214 acc 92.55999719238281 loss 0.21368762990474702start training epoch 215 
+start test epoch 215 
+start test
+[Tio] epoch 215 acc 92.48999755859376 loss 0.21282384239912033start training epoch 216 
+start test epoch 216 
+start test
+[Tio] epoch 216 acc 92.47999768066406 loss 0.21086740054607392start training epoch 217 
+start test epoch 217 
+start test
+[Tio] epoch 217 acc 92.45999741210937 loss 0.21377403958797456start training epoch 218 
+start test epoch 218 
+start test
+[Tio] epoch 218 acc 92.3299974609375 loss 0.2127101727938652start training epoch 219 
+start test epoch 219 
+start test
+[Tio] epoch 219 acc 92.49999711914063 loss 0.21447965335845948start training epoch 220 
+start test epoch 220 
+start test
+[Tio] epoch 220 acc 92.34999748535157 loss 0.21403239866018295start training epoch 221 
+start test epoch 221 
+start test
+[Tio] epoch 221 acc 92.44999738769532 loss 0.21416545594215394start training epoch 222 
+start test epoch 222 
+start test
+[Tio] epoch 222 acc 92.37999741210938 loss 0.2155758966064453start training epoch 223 
+start test epoch 223 
+start test
+[Tio] epoch 223 acc 92.35999729003906 loss 0.21630605598449706start training epoch 224 
+start test epoch 224 
+start test
+[Tio] epoch 224 acc 92.46999760742187 loss 0.2236856206560135start training epoch 225 
+start test epoch 225 
+start test
+[Tio] epoch 225 acc 92.42999729003907 loss 0.21982047909498215start training epoch 226 
+start test epoch 226 
+start test
+[Tio] epoch 226 acc 92.48999743652344 loss 0.2201897558450699start training epoch 227 
+start test epoch 227 
+start test
+[Tio] epoch 227 acc 92.39999721679688 loss 0.2175652091360092start training epoch 228 
+start test epoch 228 
+start test
+[Tio] epoch 228 acc 92.44999753417969 loss 0.22455638464450836start training epoch 229 
+start test epoch 229 
+start test
+[Tio] epoch 229 acc 92.43999733886719 loss 0.2201841298222542start training epoch 230 
+start test epoch 230 
+start test
+[Tio] epoch 230 acc 92.38999721679687 loss 0.21409642069101334start training epoch 231 
+start test epoch 231 
+start test
+[Tio] epoch 231 acc 92.40999738769531 loss 0.21733322107076644start training epoch 232 
+start test epoch 232 
+start test
+[Tio] epoch 232 acc 92.40999738769531 loss 0.20878593279361723start training epoch 233 
+start test epoch 233 
+start test
+[Tio] epoch 233 acc 92.42999714355469 loss 0.2313587455701828start training epoch 234 
+start test epoch 234 
+start test
+[Tio] epoch 234 acc 92.589997265625 loss 0.2305065741443634[Tio] find new best model epoch 234 acc 92.589997265625 loss 0.2305065741443634start training epoch 235 
+start test epoch 235 
+start test
+[Tio] epoch 235 acc 92.50999731445313 loss 0.22948526976585387start training epoch 236 
+start test epoch 236 
+start test
+[Tio] epoch 236 acc 92.35999724121093 loss 0.22983310113430022start training epoch 237 
+start test epoch 237 
+start test
+[Tio] epoch 237 acc 92.42999743652344 loss 0.23096617848873138start training epoch 238 
+start test epoch 238 
+start test
+[Tio] epoch 238 acc 92.39999729003907 loss 0.2341966149520874start training epoch 239 
+start test epoch 239 
+start test
+[Tio] epoch 239 acc 92.34999748535157 loss 0.23849069491624833start training epoch 240 
+start test epoch 240 
+start test
+[Tio] epoch 240 acc 92.29999721679688 loss 0.2313273902797699start training epoch 241 
+start test epoch 241 
+start test
+[Tio] epoch 241 acc 92.409997265625 loss 0.23706549531698226start training epoch 242 
+start test epoch 242 
+start test
+[Tio] epoch 242 acc 92.54999750976563 loss 0.23312656889915467start training epoch 243 
+start test epoch 243 
+start test
+[Tio] epoch 243 acc 92.48999743652344 loss 0.23636271101474762start training epoch 244 
+start test epoch 244 
+start test
+[Tio] epoch 244 acc 92.40999763183594 loss 0.2327666466641426start training epoch 245 
+start test epoch 245 
+start test
+[Tio] epoch 245 acc 92.39999750976563 loss 0.23695521601676942start training epoch 246 
+start test epoch 246 
+start test
+[Tio] epoch 246 acc 92.4699974609375 loss 0.2371977022385597start training epoch 247 
+start test epoch 247 
+start test
+[Tio] epoch 247 acc 92.3299974609375 loss 0.23432881108283996start training epoch 248 
+start test epoch 248 
+start test
+[Tio] epoch 248 acc 92.38999738769532 loss 0.23701202081680298start training epoch 249 
+start test epoch 249 
+start test
+[Tio] epoch 249 acc 92.48999741210937 loss 0.24354662566184998start training epoch 250 
+start test epoch 250 
+start test
+[Tio] epoch 250 acc 92.33999733886719 loss 0.24492322193145752start training epoch 251 
+start test epoch 251 
+start test
+[Tio] epoch 251 acc 92.40999733886719 loss 0.23892056147098542start training epoch 252 
+start test epoch 252 
+start test
+[Tio] epoch 252 acc 92.43999704589844 loss 0.24266849811077118start training epoch 253 
+start test epoch 253 
+start test
+[Tio] epoch 253 acc 92.47999709472656 loss 0.2475546363210678start training epoch 254 
+start test epoch 254 
+start test
+[Tio] epoch 254 acc 92.50999738769531 loss 0.24644968351364135start training epoch 255 
+start test epoch 255 
+start test
+[Tio] epoch 255 acc 92.56999753417969 loss 0.24927967545509339start training epoch 256 
+start test epoch 256 
+start test
+[Tio] epoch 256 acc 92.25999741210937 loss 0.24514091012477876start training epoch 257 
+start test epoch 257 
+start test
+[Tio] epoch 257 acc 92.43999755859375 loss 0.24609073962688446start training epoch 258 
+start test epoch 258 
+start test
+[Tio] epoch 258 acc 92.53999724121094 loss 0.25156303014278414start training epoch 259 
+start test epoch 259 
+start test
+[Tio] epoch 259 acc 92.4099974609375 loss 0.25131973136901853start training epoch 260 
+start test epoch 260 
+start test
+[Tio] epoch 260 acc 92.30999748535156 loss 0.25380293718099595start training epoch 261 
+start test epoch 261 
+start test
+[Tio] epoch 261 acc 92.49999741210938 loss 0.2542941010522842start training epoch 262 
+start test epoch 262 
+start test
+[Tio] epoch 262 acc 92.40999763183594 loss 0.2506861322593689start training epoch 263 
+start test epoch 263 
+start test
+[Tio] epoch 263 acc 92.38999716796874 loss 0.2526680176925659start training epoch 264 
+start test epoch 264 
+start test
+[Tio] epoch 264 acc 92.27999743652343 loss 0.2566400411128998start training epoch 265 
+start test epoch 265 
+start test
+[Tio] epoch 265 acc 92.46999748535156 loss 0.2595966882753372start training epoch 266 
+start test epoch 266 
+start test
+[Tio] epoch 266 acc 92.41999750976562 loss 0.257676079621315start training epoch 267 
+start test epoch 267 
+start test
+[Tio] epoch 267 acc 92.4199974609375 loss 0.2557087629079819start training epoch 268 
+start test epoch 268 
+start test
+[Tio] epoch 268 acc 92.30999772949218 loss 0.2575868910646439start training epoch 269 
+start test epoch 269 
+start test
+[Tio] epoch 269 acc 92.46999748535156 loss 0.25854954061031343start training epoch 270 
+start test epoch 270 
+start test
+[Tio] epoch 270 acc 92.43999716796876 loss 0.26089541600465777start training epoch 271 
+start test epoch 271 
+start test
+[Tio] epoch 271 acc 92.42999755859375 loss 0.26077940056324006start training epoch 272 
+start test epoch 272 
+start test
+[Tio] epoch 272 acc 92.47999753417969 loss 0.2590028436899185start training epoch 273 
+start test epoch 273 
+start test
+[Tio] epoch 273 acc 92.52999748535156 loss 0.2607946491909027start training epoch 274 
+start test epoch 274 
+start test
+[Tio] epoch 274 acc 92.47999724121094 loss 0.2664383729481697start training epoch 275 
+start test epoch 275 
+start test
+[Tio] epoch 275 acc 92.23999743652344 loss 0.2677213813018799start training epoch 276 
+start test epoch 276 
+start test
+[Tio] epoch 276 acc 92.5099974609375 loss 0.2618263410949707start training epoch 277 
+start test epoch 277 
+start test
+[Tio] epoch 277 acc 92.469997265625 loss 0.2586266368150711start training epoch 278 
+start test epoch 278 
+start test
+[Tio] epoch 278 acc 92.40999748535157 loss 0.2694825024986267start training epoch 279 
+start test epoch 279 
+start test
+[Tio] epoch 279 acc 92.26999729003906 loss 0.27127680492401124start training epoch 280 
+start test epoch 280 
+start test
+[Tio] epoch 280 acc 92.45999721679688 loss 0.2636545784497261start training epoch 281 
+start test epoch 281 
+start test
+[Tio] epoch 281 acc 92.44999738769532 loss 0.2701956474161148start training epoch 282 
+start test epoch 282 
+start test
+[Tio] epoch 282 acc 92.33999736328126 loss 0.2756774333715439start training epoch 283 
+start test epoch 283 
+start test
+[Tio] epoch 283 acc 92.38999760742188 loss 0.27179423563957217start training epoch 284 
+start test epoch 284 
+start test
+[Tio] epoch 284 acc 92.45999741210937 loss 0.2746456804943085start training epoch 285 
+start test epoch 285 
+start test
+[Tio] epoch 285 acc 92.43999741210938 loss 0.2748138066148758start training epoch 286 
+start test epoch 286 
+start test
+[Tio] epoch 286 acc 92.39999743652344 loss 0.2746677058792114start training epoch 287 
+start test epoch 287 
+start test
+[Tio] epoch 287 acc 92.39999736328124 loss 0.2776490932703018start training epoch 288 
+start test epoch 288 
+start test
+[Tio] epoch 288 acc 92.34999724121094 loss 0.2781219079828262start training epoch 289 
+start test epoch 289 
+start test
+[Tio] epoch 289 acc 92.40999733886719 loss 0.28121792865276335start training epoch 290 
+start test epoch 290 
+start test
+[Tio] epoch 290 acc 92.4199974609375 loss 0.28139823782444start training epoch 291 
+start test epoch 291 
+start test
+[Tio] epoch 291 acc 92.30999729003906 loss 0.28213194826602933start training epoch 292 
+start test epoch 292 
+start test
+[Tio] epoch 292 acc 92.32999738769531 loss 0.2798081552886963start training epoch 293 
+start test epoch 293 
+start test
+[Tio] epoch 293 acc 92.43999748535157 loss 0.28404379840373994start training epoch 294 
+start test epoch 294 
+start test
+[Tio] epoch 294 acc 92.43999755859375 loss 0.2823049658060074start training epoch 295 
+start test epoch 295 
+start test
+[Tio] epoch 295 acc 92.409997265625 loss 0.28415824457645417start training epoch 296 
+start test epoch 296 
+start test
+[Tio] epoch 296 acc 92.38999738769532 loss 0.2835660137033463start training epoch 297 
+start test epoch 297 
+start test
+[Tio] epoch 297 acc 92.379997265625 loss 0.2853728443288803start training epoch 298 
+start test epoch 298 
+start test
+[Tio] epoch 298 acc 92.35999782714843 loss 0.28464489421367645start training epoch 299 
+start test epoch 299 
+start test
+[Tio] epoch 299 acc 92.319997265625 loss 0.2988353644752502start training epoch 300 
+start test epoch 300 
+start test
+[Tio] epoch 300 acc 92.43999763183594 loss 0.28700482388973236start training epoch 301 
+start test epoch 301 
+start test
+[Tio] epoch 301 acc 92.48999736328125 loss 0.29316263731002806start training epoch 302 
+start test epoch 302 
+start test
+[Tio] epoch 302 acc 92.43999741210938 loss 0.29459066329479217start training epoch 303 
+start test epoch 303 
+start test
+[Tio] epoch 303 acc 92.33999748535156 loss 0.2991819541788101start training epoch 304 
+start test epoch 304 
+start test
+[Tio] epoch 304 acc 92.32999765625 loss 0.29755887507915496start training epoch 305 
+start test epoch 305 
+start test
+[Tio] epoch 305 acc 92.40999741210938 loss 0.295881847949028start training epoch 306 
+start test epoch 306 
+start test
+[Tio] epoch 306 acc 92.41999765625 loss 0.29967814717292784start training epoch 307 
+start test epoch 307 
+start test
+[Tio] epoch 307 acc 92.36999743652343 loss 0.30143663585186004start training epoch 308 
+start test epoch 308 
+start test
+[Tio] epoch 308 acc 92.35999738769532 loss 0.2955076774215698start training epoch 309 
+start test epoch 309 
+start test
+[Tio] epoch 309 acc 92.28999753417969 loss 0.3022027362060547start training epoch 310 
+start test epoch 310 
+start test
+[Tio] epoch 310 acc 92.32999721679687 loss 0.29852497486114504start training epoch 311 
+start test epoch 311 
+start test
+[Tio] epoch 311 acc 92.36999750976562 loss 0.29760210807323456start training epoch 312 
+start test epoch 312 
+start test
+[Tio] epoch 312 acc 92.29999731445312 loss 0.2981306003332138start training epoch 313 
+start test epoch 313 
+start test
+[Tio] epoch 313 acc 92.33999736328126 loss 0.3091778968381882start training epoch 314 
+start test epoch 314 
+start test
+[Tio] epoch 314 acc 92.3199974609375 loss 0.3028517177438736start training epoch 315 
+start test epoch 315 
+start test
+[Tio] epoch 315 acc 92.27999741210938 loss 0.313999662168026start training epoch 316 
+start test epoch 316 
+start test
+[Tio] epoch 316 acc 92.45999729003906 loss 0.30434178147315977start training epoch 317 
+start test epoch 317 
+start test
+[Tio] epoch 317 acc 92.28999741210937 loss 0.3084667396116257start training epoch 318 
+start test epoch 318 
+start test
+[Tio] epoch 318 acc 92.29999738769531 loss 0.31181974249839783start training epoch 319 
+start test epoch 319 
+start test
+[Tio] epoch 319 acc 92.20999724121094 loss 0.31431266479492187start training epoch 320 
+start test epoch 320 
+start test
+[Tio] epoch 320 acc 92.3199974609375 loss 0.3086767680501938start training epoch 321 
+start test epoch 321 
+start test
+[Tio] epoch 321 acc 92.08999760742188 loss 0.311082428355217start training epoch 322 
+start test epoch 322 
+start test
+[Tio] epoch 322 acc 92.43999719238282 loss 0.31480458996772764start training epoch 323 
+start test epoch 323 
+start test
+[Tio] epoch 323 acc 92.32999736328125 loss 0.3214052609920502start training epoch 324 
+start test epoch 324 
+start test
+[Tio] epoch 324 acc 92.29999738769531 loss 0.31739384887218475start training epoch 325 
+start test epoch 325 
+start test
+[Tio] epoch 325 acc 92.33999743652343 loss 0.31611201053619387start training epoch 326 
+start test epoch 326 
+start test
+[Tio] epoch 326 acc 92.40999748535157 loss 0.32338081744670866start training epoch 327 
+start test epoch 327 
+start test
+[Tio] epoch 327 acc 92.38999743652344 loss 0.32112256226062774start training epoch 328 
+start test epoch 328 
+start test
+[Tio] epoch 328 acc 92.26999768066406 loss 0.3283631716489792start training epoch 329 
+start test epoch 329 
+start test
+[Tio] epoch 329 acc 92.40999753417968 loss 0.3189887052345276start training epoch 330 
+start test epoch 330 
+start test
+[Tio] epoch 330 acc 92.42999765625 loss 0.31804795787334444start training epoch 331 
+start test epoch 331 
+start test
+[Tio] epoch 331 acc 92.23999714355469 loss 0.32837436542987825start training epoch 332 
+start test epoch 332 
+start test
+[Tio] epoch 332 acc 92.27999750976562 loss 0.32789386748313903start training epoch 333 
+start test epoch 333 
+start test
+[Tio] epoch 333 acc 92.39999748535156 loss 0.32476392559051515start training epoch 334 
+start test epoch 334 
+start test
+[Tio] epoch 334 acc 92.16999741210938 loss 0.3324638957595825start training epoch 335 
+start test epoch 335 
+start test
+[Tio] epoch 335 acc 92.34999719238282 loss 0.33485462918281556start training epoch 336 
+start test epoch 336 
+start test
+[Tio] epoch 336 acc 92.18999743652344 loss 0.3344612184095383start training epoch 337 
+start test epoch 337 
+start test
+[Tio] epoch 337 acc 92.17999743652344 loss 0.33057566198349start training epoch 338 
+start test epoch 338 
+start test
+[Tio] epoch 338 acc 92.24999755859375 loss 0.3361787994480133start training epoch 339 
+start test epoch 339 
+start test
+[Tio] epoch 339 acc 92.39999750976563 loss 0.33768924756526947start training epoch 340 
+start test epoch 340 
+start test
+[Tio] epoch 340 acc 92.30999758300781 loss 0.3296723010158539start training epoch 341 
+start test epoch 341 
+start test
+[Tio] epoch 341 acc 92.34999733886718 loss 0.3391518167448044start training epoch 342 
+start test epoch 342 
+start test
+[Tio] epoch 342 acc 92.42999736328125 loss 0.3333512075138092start training epoch 343 
+start test epoch 343 
+start test
+[Tio] epoch 343 acc 92.36999772949218 loss 0.3406381495809555start training epoch 344 
+start test epoch 344 
+start test
+[Tio] epoch 344 acc 92.32999729003906 loss 0.3398277359199524start training epoch 345 
+start test epoch 345 
+start test
+[Tio] epoch 345 acc 92.27999750976562 loss 0.3381687008857727start training epoch 346 
+start test epoch 346 
+start test
+[Tio] epoch 346 acc 92.28999738769531 loss 0.34834037815093993start training epoch 347 
+start test epoch 347 
+start test
+[Tio] epoch 347 acc 92.36999729003907 loss 0.34702944903373717start training epoch 348 
+start test epoch 348 
+start test
+[Tio] epoch 348 acc 92.32999750976562 loss 0.34980130269050597start training epoch 349 
+start test epoch 349 
+start test
+[Tio] epoch 349 acc 92.11999731445313 loss 0.3481590412425995start training epoch 350 
+start test epoch 350 
+start test
+[Tio] epoch 350 acc 92.33999758300781 loss 0.35093195162773133start training epoch 351 
+start test epoch 351 
+start test
+[Tio] epoch 351 acc 92.22999724121094 loss 0.34839913081169127start training epoch 352 
+start test epoch 352 
+start test
+[Tio] epoch 352 acc 92.2299974609375 loss 0.3493729321479797start training epoch 353 
+start test epoch 353 
+start test
+[Tio] epoch 353 acc 92.19999748535156 loss 0.3605413050079346start training epoch 354 
+start test epoch 354 
+start test
+[Tio] epoch 354 acc 92.45999736328125 loss 0.35736470056533814start training epoch 355 
+start test epoch 355 
+start test
+[Tio] epoch 355 acc 92.259997265625 loss 0.36298044443130495start training epoch 356 
+start test epoch 356 
+start test
+[Tio] epoch 356 acc 92.22999755859375 loss 0.35786858294487start training epoch 357 
+start test epoch 357 
+start test
+[Tio] epoch 357 acc 92.29999760742187 loss 0.35185670056343077start training epoch 358 
+start test epoch 358 
+start test
+[Tio] epoch 358 acc 92.12999714355469 loss 0.3609056743717194start training epoch 359 
+start test epoch 359 
+start test
+[Tio] epoch 359 acc 92.199997265625 loss 0.3607482238006592start training epoch 360 
+start test epoch 360 
+start test
+[Tio] epoch 360 acc 92.2699975341797 loss 0.3639944524765015start training epoch 361 
+start test epoch 361 
+start test
+[Tio] epoch 361 acc 92.31999741210937 loss 0.3664027531337738start training epoch 362 
+start test epoch 362 
+start test
+[Tio] epoch 362 acc 92.24999750976562 loss 0.36136343187332154start training epoch 363 
+start test epoch 363 
+start test
+[Tio] epoch 363 acc 92.29999743652344 loss 0.3634121405029297start training epoch 364 
+start test epoch 364 
+start test
+[Tio] epoch 364 acc 92.19999733886719 loss 0.35506616473674774start training epoch 365 
+start test epoch 365 
+start test
+[Tio] epoch 365 acc 92.36999736328124 loss 0.37397602893829346start training epoch 366 
+start test epoch 366 
+start test
+[Tio] epoch 366 acc 92.38999743652344 loss 0.36364935808181764start training epoch 367 
+start test epoch 367 
+start test
+[Tio] epoch 367 acc 92.34999755859376 loss 0.37162038285255433start training epoch 368 
+start test epoch 368 
+start test
+[Tio] epoch 368 acc 92.33999721679687 loss 0.37761098009109495start training epoch 369 
+start test epoch 369 
+start test
+[Tio] epoch 369 acc 92.24999748535156 loss 0.3703807453107834start training epoch 370 
+start test epoch 370 
+start test
+[Tio] epoch 370 acc 92.24999743652344 loss 0.3759579673862457start training epoch 371 
+start test epoch 371 
+start test
+[Tio] epoch 371 acc 92.28999748535156 loss 0.3726389191246033start training epoch 372 
+start test epoch 372 
+start test
+[Tio] epoch 372 acc 92.2399975830078 loss 0.3810771076869965start training epoch 373 
+start test epoch 373 
+start test
+[Tio] epoch 373 acc 92.33999748535156 loss 0.37469622311115264start training epoch 374 
+start test epoch 374 
+start test
+[Tio] epoch 374 acc 92.30999765625 loss 0.38427554864883423start training epoch 375 
+start test epoch 375 
+start test
+[Tio] epoch 375 acc 92.32999768066406 loss 0.3807408257675171start training epoch 376 
+start test epoch 376 
+start test
+[Tio] epoch 376 acc 92.24999736328125 loss 0.38747407519340515start training epoch 377 
+start test epoch 377 
+start test
+[Tio] epoch 377 acc 92.18999736328125 loss 0.3820889742946625start training epoch 378 
+start test epoch 378 
+start test
+[Tio] epoch 378 acc 92.18999729003906 loss 0.3820734259223938start training epoch 379 
+start test epoch 379 
+start test
+[Tio] epoch 379 acc 92.34999748535157 loss 0.3878808893299103start training epoch 380 
+start test epoch 380 
+start test
+[Tio] epoch 380 acc 92.28999716796875 loss 0.3920299632358551start training epoch 381 
+start test epoch 381 
+start test
+[Tio] epoch 381 acc 92.29999738769531 loss 0.3888654231643677start training epoch 382 
+start test epoch 382 
+start test
+[Tio] epoch 382 acc 92.20999775390625 loss 0.40259216665267944start training epoch 383 
+start test epoch 383 
+start test
+[Tio] epoch 383 acc 92.21999743652344 loss 0.39009038569450377start training epoch 384 
+start test epoch 384 
+start test
+[Tio] epoch 384 acc 92.2299973876953 loss 0.38687486585617065start training epoch 385 
+start test epoch 385 
+start test
+[Tio] epoch 385 acc 92.31999731445312 loss 0.39560109956741335start training epoch 386 
+start test epoch 386 
+start test
+[Tio] epoch 386 acc 92.24999750976562 loss 0.4007245732212067start training epoch 387 
+start test epoch 387 
+start test
+[Tio] epoch 387 acc 92.20999760742187 loss 0.39463827832221987start training epoch 388 
+start test epoch 388 
+start test
+[Tio] epoch 388 acc 92.21999736328125 loss 0.40385636130332947start training epoch 389 
+start test epoch 389 
+start test
+[Tio] epoch 389 acc 92.29999738769531 loss 0.40398043082237245start training epoch 390 
+start test epoch 390 
+start test
+[Tio] epoch 390 acc 92.19999709472657 loss 0.3979539991092682start training epoch 391 
+start test epoch 391 
+start test
+[Tio] epoch 391 acc 92.31999719238281 loss 0.4030044912147522start training epoch 392 
+start test epoch 392 
+start test
+[Tio] epoch 392 acc 92.21999736328125 loss 0.4089422726726532start training epoch 393 
+start test epoch 393 
+start test
+[Tio] epoch 393 acc 92.25999748535156 loss 0.41427770286560056start training epoch 394 
+start test epoch 394 
+start test
+[Tio] epoch 394 acc 92.09999736328125 loss 0.41791562349319455start training epoch 395 
+start test epoch 395 
+start test
+[Tio] epoch 395 acc 92.31999733886718 loss 0.41313624985694886start training epoch 396 
+start test epoch 396 
+start test
+[Tio] epoch 396 acc 92.27999736328125 loss 0.41715285740852354start training epoch 397 
+start test epoch 397 
+start test
+[Tio] epoch 397 acc 92.22999741210937 loss 0.40912044799804687start training epoch 398 
+start test epoch 398 
+start test
+[Tio] epoch 398 acc 92.17999716796875 loss 0.4069988748455048start training epoch 399 
+start test epoch 399 
+start test
+[Tio] epoch 399 acc 92.35999709472657 loss 0.41349810583114627start training epoch 400 
+start test epoch 400 
+start test
+[Tio] epoch 400 acc 92.21999750976562 loss 0.419145594291687start training epoch 401 
+start test epoch 401 
+start test
+[Tio] epoch 401 acc 92.17999765625 loss 0.42192107840538023start training epoch 402 
+start test epoch 402 
+start test
+[Tio] epoch 402 acc 92.30999772949218 loss 0.41919312344551085start training epoch 403 
+start test epoch 403 
+start test
+[Tio] epoch 403 acc 92.20999753417969 loss 0.41919109274864197start training epoch 404 
+start test epoch 404 
+start test
+[Tio] epoch 404 acc 92.15999736328125 loss 0.41814085078239444start training epoch 405 
+start test epoch 405 
+start test
+[Tio] epoch 405 acc 92.26999738769531 loss 0.4279887934780121start training epoch 406 
+start test epoch 406 
+start test
+[Tio] epoch 406 acc 92.23999760742187 loss 0.4263763845920563start training epoch 407 
+start test epoch 407 
+start test
+[Tio] epoch 407 acc 92.33999729003907 loss 0.42836225407600403start training epoch 408 
+start test epoch 408 
+start test
+[Tio] epoch 408 acc 92.29999760742187 loss 0.4323943590450287start training epoch 409 
+start test epoch 409 
+start test
+[Tio] epoch 409 acc 92.32999716796876 loss 0.4313923882293701start training epoch 410 
+start test epoch 410 
+start test
+[Tio] epoch 410 acc 92.09999736328125 loss 0.43507896330833434start training epoch 411 
+start test epoch 411 
+start test
+[Tio] epoch 411 acc 92.34999733886718 loss 0.4437017524051666start training epoch 412 
+start test epoch 412 
+start test
+[Tio] epoch 412 acc 92.29999738769531 loss 0.4383192963600159start training epoch 413 
+start test epoch 413 
+start test
+[Tio] epoch 413 acc 92.17999765625 loss 0.4395805519962311start training epoch 414 
+start test epoch 414 
+start test
+[Tio] epoch 414 acc 92.21999704589844 loss 0.4381236403465271start training epoch 415 
+start test epoch 415 
+start test
+[Tio] epoch 415 acc 92.29999729003906 loss 0.4490116056919098start training epoch 416 
+start test epoch 416 
+start test
+[Tio] epoch 416 acc 92.23999738769531 loss 0.4450224894332886start training epoch 417 
+start test epoch 417 
+start test
+[Tio] epoch 417 acc 91.95999716796875 loss 0.45106669964790347start training epoch 418 
+start test epoch 418 
+start test
+[Tio] epoch 418 acc 92.18999741210938 loss 0.44456288166046143start training epoch 419 
+start test epoch 419 
+start test
+[Tio] epoch 419 acc 92.24999765625 loss 0.44725396956443786start training epoch 420 
+start test epoch 420 
+start test
+[Tio] epoch 420 acc 92.19999755859375 loss 0.45010402477264405start training epoch 421 
+start test epoch 421 
+start test
+[Tio] epoch 421 acc 92.22999741210937 loss 0.45346327017784116start training epoch 422 
+start test epoch 422 
+start test
+[Tio] epoch 422 acc 92.289997265625 loss 0.45484557174682616start training epoch 423 
+start test epoch 423 
+start test
+[Tio] epoch 423 acc 92.31999741210937 loss 0.45954573305130003start training epoch 424 
+start test epoch 424 
+start test
+[Tio] epoch 424 acc 92.1199974609375 loss 0.4598491153526306start training epoch 425 
+start test epoch 425 
+start test
+[Tio] epoch 425 acc 92.18999758300781 loss 0.46807020261764526start training epoch 426 
+start test epoch 426 
+start test
+[Tio] epoch 426 acc 92.17999760742188 loss 0.45562164819717405start training epoch 427 
+start test epoch 427 
+start test
+[Tio] epoch 427 acc 92.17999760742188 loss 0.4584955801105499start training epoch 428 
+start test epoch 428 
+start test
+[Tio] epoch 428 acc 92.27999714355468 loss 0.46893412923812866start training epoch 429 
+start test epoch 429 
+start test
+[Tio] epoch 429 acc 92.18999743652344 loss 0.46212549558639526start training epoch 430 
+start test epoch 430 
+start test
+[Tio] epoch 430 acc 92.12999765625 loss 0.47604013909339904start training epoch 431 
+start test epoch 431 
+start test
+[Tio] epoch 431 acc 92.21999750976562 loss 0.47136670049667356start training epoch 432 
+start test epoch 432 
+start test
+[Tio] epoch 432 acc 92.2399975830078 loss 0.47371692543029786start training epoch 433 
+start test epoch 433 
+start test
+[Tio] epoch 433 acc 92.2599973388672 loss 0.47377834932327273start training epoch 434 
+start test epoch 434 
+start test
+[Tio] epoch 434 acc 92.23999731445312 loss 0.4753282522106171start training epoch 435 
+start test epoch 435 
+start test
+[Tio] epoch 435 acc 92.289997265625 loss 0.4779097716331482start training epoch 436 
+start test epoch 436 
+start test
+[Tio] epoch 436 acc 92.18999736328125 loss 0.47601223810195925start training epoch 437 
+start test epoch 437 
+start test
+[Tio] epoch 437 acc 92.20999760742187 loss 0.4788425800895691start training epoch 438 
+start test epoch 438 
+start test
+[Tio] epoch 438 acc 92.24999758300781 loss 0.4823076982975006start training epoch 439 
+start test epoch 439 
+start test
+[Tio] epoch 439 acc 92.16999733886719 loss 0.4911925795936585start training epoch 440 
+start test epoch 440 
+start test
+[Tio] epoch 440 acc 92.2699975341797 loss 0.48319342915534974start training epoch 441 
+start test epoch 441 
+start test
+[Tio] epoch 441 acc 92.14999750976563 loss 0.48745027417182923start training epoch 442 
+start test epoch 442 
+start test
+[Tio] epoch 442 acc 92.1299975830078 loss 0.48501025899887085start training epoch 443 
+start test epoch 443 
+start test
+[Tio] epoch 443 acc 92.17999721679688 loss 0.49212008432388304start training epoch 444 
+start test epoch 444 
+start test
+[Tio] epoch 444 acc 91.95999724121094 loss 0.4914676830768585start training epoch 445 
+start test epoch 445 
+start test
+[Tio] epoch 445 acc 92.13999733886719 loss 0.4923629995059967start training epoch 446 
+start test epoch 446 
+start test
+[Tio] epoch 446 acc 92.03999748535156 loss 0.49386254237174987start training epoch 447 
+start test epoch 447 
+start test
+[Tio] epoch 447 acc 92.1499974609375 loss 0.49896686502456666start training epoch 448 
+start test epoch 448 
+start test
+[Tio] epoch 448 acc 92.249997265625 loss 0.4928841735839844start training epoch 449 
+start test epoch 449 
+start test
+[Tio] epoch 449 acc 92.1699974609375 loss 0.5006932461738587start training epoch 450 
+start test epoch 450 
+start test
+[Tio] epoch 450 acc 92.03999736328124 loss 0.4995396033000946start training epoch 451 
+start test epoch 451 
+start test
+[Tio] epoch 451 acc 92.26999731445312 loss 0.5030291486167908start training epoch 452 
+start test epoch 452 
+start test
+[Tio] epoch 452 acc 92.08999768066407 loss 0.5023098528385163start training epoch 453 
+start test epoch 453 
+start test
+[Tio] epoch 453 acc 92.19999741210937 loss 0.5073112545108796start training epoch 454 
+start test epoch 454 
+start test
+[Tio] epoch 454 acc 92.18999765625 loss 0.5097007577133179start training epoch 455 
+start test epoch 455 
+start test
+[Tio] epoch 455 acc 92.06999780273438 loss 0.5077934449100494start training epoch 456 
+start test epoch 456 
+start test
+[Tio] epoch 456 acc 92.11999743652343 loss 0.520032467842102start training epoch 457 
+start test epoch 457 
+start test
+[Tio] epoch 457 acc 92.25999741210937 loss 0.5126571728801728start training epoch 458 
+start test epoch 458 
+start test
+[Tio] epoch 458 acc 92.219997265625 loss 0.5128975458335876start training epoch 459 
+start test epoch 459 
+start test
+[Tio] epoch 459 acc 92.15999772949219 loss 0.5274935821723938start training epoch 460 
+start test epoch 460 
+start test
+[Tio] epoch 460 acc 92.13999741210938 loss 0.5236356317806244start training epoch 461 
+start test epoch 461 
+start test
+[Tio] epoch 461 acc 92.07999748535157 loss 0.5252596605682373start training epoch 462 
+start test epoch 462 
+start test
+[Tio] epoch 462 acc 92.18999758300781 loss 0.52979044216156start training epoch 463 
+start test epoch 463 
+start test
+[Tio] epoch 463 acc 92.109997265625 loss 0.5244173638725281start training epoch 464 
+start test epoch 464 
+start test
+[Tio] epoch 464 acc 92.15999758300781 loss 0.5350511557865143start training epoch 465 
+start test epoch 465 
+start test
+[Tio] epoch 465 acc 92.1199974609375 loss 0.531769954662323start training epoch 466 
+start test epoch 466 
+start test
+[Tio] epoch 466 acc 92.13999770507813 loss 0.5201536804580689start training epoch 467 
+start test epoch 467 
+start test
+[Tio] epoch 467 acc 92.10999711914063 loss 0.5351843269443511start training epoch 468 
+start test epoch 468 
+start test
+[Tio] epoch 468 acc 92.05999724121094 loss 0.53663158577919start training epoch 469 
+start test epoch 469 
+start test
+[Tio] epoch 469 acc 92.09999733886718 loss 0.5431804132270813start training epoch 470 
+start test epoch 470 
+start test
+[Tio] epoch 470 acc 92.15999736328125 loss 0.5321613985443115start training epoch 471 
+start test epoch 471 
+start test
+[Tio] epoch 471 acc 92.14999724121094 loss 0.5382620743846893start training epoch 472 
+start test epoch 472 
+start test
+[Tio] epoch 472 acc 92.18999733886719 loss 0.5347850998497009start training epoch 473 
+start test epoch 473 
+start test
+[Tio] epoch 473 acc 92.11999736328124 loss 0.5429287363243103start training epoch 474 
+start test epoch 474 
+start test
+[Tio] epoch 474 acc 92.07999748535157 loss 0.5445356183242798start training epoch 475 
+start test epoch 475 
+start test
+[Tio] epoch 475 acc 92.15999765625 loss 0.5571777061748505start training epoch 476 
+start test epoch 476 
+start test
+[Tio] epoch 476 acc 92.03999741210937 loss 0.5540977358627319start training epoch 477 
+start test epoch 477 
+start test
+[Tio] epoch 477 acc 92.11999782714844 loss 0.5601176203727722start training epoch 478 
+start test epoch 478 
+start test
+[Tio] epoch 478 acc 92.15999719238282 loss 0.5536785958576202start training epoch 479 
+start test epoch 479 
+start test
+[Tio] epoch 479 acc 92.17999753417969 loss 0.560444091501236start training epoch 480 
+start test epoch 480 
+start test
+[Tio] epoch 480 acc 92.19999763183594 loss 0.5686595840454102start training epoch 481 
+start test epoch 481 
+start test
+[Tio] epoch 481 acc 92.0999975830078 loss 0.5530140215110779start training epoch 482 
+start test epoch 482 
+start test
+[Tio] epoch 482 acc 92.09999765625 loss 0.5669819882202148start training epoch 483 
+start test epoch 483 
+start test
+[Tio] epoch 483 acc 92.26999768066406 loss 0.5609841792869568start training epoch 484 
+start test epoch 484 
+start test
+[Tio] epoch 484 acc 92.14999709472656 loss 0.5616662891960144start training epoch 485 
+start test epoch 485 
+start test
+[Tio] epoch 485 acc 92.0299974609375 loss 0.5729873530578613start training epoch 486 
+start test epoch 486 
+start test
+[Tio] epoch 486 acc 92.17999731445312 loss 0.572966556854248start training epoch 487 
+start test epoch 487 
+start test
+[Tio] epoch 487 acc 92.05999738769532 loss 0.5774725167560577start training epoch 488 
+start test epoch 488 
+start test
+[Tio] epoch 488 acc 92.11999729003907 loss 0.5767299676322937start training epoch 489 
+start test epoch 489 
+start test
+[Tio] epoch 489 acc 91.97999729003907 loss 0.5775465022087097start training epoch 490 
+start test epoch 490 
+start test
+[Tio] epoch 490 acc 92.26999731445312 loss 0.5790635006046295start training epoch 491 
+start test epoch 491 
+start test
+[Tio] epoch 491 acc 92.13999738769532 loss 0.5860902178764343start training epoch 492 
+start test epoch 492 
+start test
+[Tio] epoch 492 acc 92.09999736328125 loss 0.5851080024719238start training epoch 493 
+start test epoch 493 
+start test
+[Tio] epoch 493 acc 92.00999748535156 loss 0.5804493650627136start training epoch 494 
+start test epoch 494 
+start test
+[Tio] epoch 494 acc 92.0299974609375 loss 0.5953831069374085start training epoch 495 
+start test epoch 495 
+start test
+[Tio] epoch 495 acc 92.1199974609375 loss 0.5928884826564789start training epoch 496 
+start test epoch 496 
+start test
+[Tio] epoch 496 acc 92.14999716796875 loss 0.5929307663917541start training epoch 497 
+start test epoch 497 
+start test
+[Tio] epoch 497 acc 92.21999758300781 loss 0.5881476472663879start training epoch 498 
+start test epoch 498 
+start test
+[Tio] epoch 498 acc 92.15999758300781 loss 0.5911770721912384start training epoch 499 
+start test epoch 499 
+start test
+[Tio] epoch 499 acc 92.099997265625 loss 0.6064199172592163start training epoch 500 
+start test epoch 500 
+start test
+[Tio] epoch 500 acc 91.95999763183593 loss 0.6010875349426269start training epoch 501 
+start test epoch 501 
+start test
+[Tio] epoch 501 acc 92.14999731445313 loss 0.6017064700126648start training epoch 502 
+start test epoch 502 
+start test
+[Tio] epoch 502 acc 92.07999748535157 loss 0.6015509769058227start training epoch 503 
+start test epoch 503 
+start test
+[Tio] epoch 503 acc 92.14999709472656 loss 0.6072333621978759start training epoch 504 
+start test epoch 504 
+start test
+[Tio] epoch 504 acc 92.03999743652344 loss 0.6101412530136109start training epoch 505 
+start test epoch 505 
+start test
+[Tio] epoch 505 acc 92.27999714355468 loss 0.5974929018211365start training epoch 506 
+start test epoch 506 
+start test
+[Tio] epoch 506 acc 92.22999741210937 loss 0.6209086016654968start training epoch 507 
+start test epoch 507 
+start test
+[Tio] epoch 507 acc 92.2699974609375 loss 0.6075417103004456start training epoch 508 
+start test epoch 508 
+start test
+[Tio] epoch 508 acc 92.08999743652343 loss 0.6206121274375915start training epoch 509 
+start test epoch 509 
+start test
+[Tio] epoch 509 acc 92.199997265625 loss 0.623492919139862start training epoch 510 
+start test epoch 510 
+start test
+[Tio] epoch 510 acc 92.00999750976563 loss 0.6151316575717926start training epoch 511 
+start test epoch 511 
+start test
+[Tio] epoch 511 acc 92.00999750976563 loss 0.624688357181549start training epoch 512 
+start test epoch 512 
+start test
+[Tio] epoch 512 acc 92.12999743652344 loss 0.6300200633621216start training epoch 513 
+start test epoch 513 
+start test
+[Tio] epoch 513 acc 92.02999714355468 loss 0.6328262329387665start training epoch 514 
+start test epoch 514 
+start test
+[Tio] epoch 514 acc 91.98999748535157 loss 0.6360603747367859start training epoch 515 
+start test epoch 515 
+start test
+[Tio] epoch 515 acc 92.13999763183594 loss 0.6173521462440491start training epoch 516 
+start test epoch 516 
+start test
+[Tio] epoch 516 acc 92.10999731445312 loss 0.6331374881744385start training epoch 517 
+start test epoch 517 
+start test
+[Tio] epoch 517 acc 92.1199974609375 loss 0.6316261424636841start training epoch 518 
+start test epoch 518 
+start test
+[Tio] epoch 518 acc 92.02999753417969 loss 0.6446470707511902start training epoch 519 
+start test epoch 519 
+start test
+[Tio] epoch 519 acc 92.25999748535156 loss 0.6429258835411071start training epoch 520 
+start test epoch 520 
+start test
+[Tio] epoch 520 acc 92.02999753417969 loss 0.6407928189659119start training epoch 521 
+start test epoch 521 
+start test
+[Tio] epoch 521 acc 92.00999721679688 loss 0.6485078952980041start training epoch 522 
+start test epoch 522 
+start test
+[Tio] epoch 522 acc 92.04999709472656 loss 0.6454513975429534start training epoch 523 
+start test epoch 523 
+start test
+[Tio] epoch 523 acc 91.92999755859375 loss 0.6520269999217987start training epoch 524 
+start test epoch 524 
+start test
+[Tio] epoch 524 acc 92.01999748535157 loss 0.6664520718955994start training epoch 525 
+start test epoch 525 
+start test
+[Tio] epoch 525 acc 92.10999733886719 loss 0.6625148624038696start training epoch 526 
+start test epoch 526 
+start test
+[Tio] epoch 526 acc 92.20999753417969 loss 0.6609552376747131start training epoch 527 
+start test epoch 527 
+start test
+[Tio] epoch 527 acc 92.159997265625 loss 0.6584503590011597start training epoch 528 
+start test epoch 528 
+start test
+[Tio] epoch 528 acc 92.02999753417969 loss 0.6721955242919921start training epoch 529 
+start test epoch 529 
+start test
+[Tio] epoch 529 acc 91.93999724121093 loss 0.6546815024757385start training epoch 530 
+start test epoch 530 
+start test
+[Tio] epoch 530 acc 92.10999716796876 loss 0.6617839784431457start training epoch 531 
+start test epoch 531 
+start test
+[Tio] epoch 531 acc 92.00999736328124 loss 0.6610367611885071start training epoch 532 
+start test epoch 532 
+start test
+[Tio] epoch 532 acc 91.97999741210937 loss 0.6729760816574096start training epoch 533 
+start test epoch 533 
+start test
+[Tio] epoch 533 acc 92.03999736328124 loss 0.669592846660614start training epoch 534 
+start test epoch 534 
+start test
+[Tio] epoch 534 acc 92.01999716796875 loss 0.685010364894867start training epoch 535 
+start test epoch 535 
+start test
+[Tio] epoch 535 acc 92.08999753417969 loss 0.6748754263877869start training epoch 536 
+start test epoch 536 
+start test
+[Tio] epoch 536 acc 92.00999758300782 loss 0.6751343211555481start training epoch 537 
+start test epoch 537 
+start test
+[Tio] epoch 537 acc 92.0599974609375 loss 0.688577757396698start training epoch 538 
+start test epoch 538 
+start test
+[Tio] epoch 538 acc 92.06999748535156 loss 0.6818833793163299start training epoch 539 
+start test epoch 539 
+start test
+[Tio] epoch 539 acc 92.07999753417968 loss 0.6870039308071136start training epoch 540 
+start test epoch 540 
+start test
+[Tio] epoch 540 acc 92.0299974609375 loss 0.6940013234329223start training epoch 541 
+start test epoch 541 
+start test
+[Tio] epoch 541 acc 92.0299974609375 loss 0.6913463578987121start training epoch 542 
+start test epoch 542 
+start test
+[Tio] epoch 542 acc 91.91999721679687 loss 0.6938772738456727start training epoch 543 
+start test epoch 543 
+start test
+[Tio] epoch 543 acc 92.02999729003906 loss 0.7041849929237366start training epoch 544 
+start test epoch 544 
+start test
+[Tio] epoch 544 acc 92.03999758300782 loss 0.7110228444099427start training epoch 545 
+start test epoch 545 
+start test
+[Tio] epoch 545 acc 91.99999729003906 loss 0.6957894098472596start training epoch 546 
+start test epoch 546 
+start test
+[Tio] epoch 546 acc 92.01999724121094 loss 0.7138467658805847start training epoch 547 
+start test epoch 547 
+start test
+[Tio] epoch 547 acc 92.07999748535157 loss 0.6987568607521057start training epoch 548 
+start test epoch 548 
+start test
+[Tio] epoch 548 acc 91.89999741210937 loss 0.713344121685028start training epoch 549 
+start test epoch 549 
+start test
+[Tio] epoch 549 acc 92.0299974609375 loss 0.7091081754493713start training epoch 550 
+start test epoch 550 
+start test
+[Tio] epoch 550 acc 91.99999738769532 loss 0.7203768662452698start training epoch 551 
+start test epoch 551 
+start test
+[Tio] epoch 551 acc 91.94999711914062 loss 0.7124147741127014start training epoch 552 
+start test epoch 552 
+start test
+[Tio] epoch 552 acc 92.11999724121094 loss 0.7189237385559082start training epoch 553 
+start test epoch 553 
+start test
+[Tio] epoch 553 acc 92.12999699707031 loss 0.7284855340766907start training epoch 554 
+start test epoch 554 
+start test
+[Tio] epoch 554 acc 92.06999765625 loss 0.7291289379692077start training epoch 555 
+start test epoch 555 
+start test
+[Tio] epoch 555 acc 91.95999763183593 loss 0.727024097442627start training epoch 556 
+start test epoch 556 
+start test
+[Tio] epoch 556 acc 92.04999741210938 loss 0.7242397497367858start training epoch 557 
+start test epoch 557 
+start test
+[Tio] epoch 557 acc 92.03999755859375 loss 0.7284862661361694start training epoch 558 
+start test epoch 558 
+start test
+[Tio] epoch 558 acc 92.12999721679688 loss 0.7445378724479675start training epoch 559 
+start test epoch 559 
+start test
+[Tio] epoch 559 acc 91.92999733886718 loss 0.7385566139984131start training epoch 560 
+start test epoch 560 
+start test
+[Tio] epoch 560 acc 92.08999743652343 loss 0.7458116967391968start training epoch 561 
+start test epoch 561 
+start test
+[Tio] epoch 561 acc 91.91999733886719 loss 0.7407720748710632start training epoch 562 
+start test epoch 562 
+start test
+[Tio] epoch 562 acc 91.96999738769532 loss 0.7446816512489319start training epoch 563 
+start test epoch 563 
+start test
+[Tio] epoch 563 acc 92.05999738769532 loss 0.7459548763465881start training epoch 564 
+start test epoch 564 
+start test
+[Tio] epoch 564 acc 92.04999704589844 loss 0.7491317705154419start training epoch 565 
+start test epoch 565 
+start test
+[Tio] epoch 565 acc 91.86999724121094 loss 0.7441137207984925start training epoch 566 
+start test epoch 566 
+start test
+[Tio] epoch 566 acc 91.95999741210937 loss 0.7718331349182129start training epoch 567 
+start test epoch 567 
+start test
+[Tio] epoch 567 acc 92.09999729003906 loss 0.7508771359443664start training epoch 568 
+start test epoch 568 
+start test
+[Tio] epoch 568 acc 91.80999719238281 loss 0.7526906416511535start training epoch 569 
+start test epoch 569 
+start test
+[Tio] epoch 569 acc 91.98999763183593 loss 0.7594542468452453start training epoch 570 
+start test epoch 570 
+start test
+[Tio] epoch 570 acc 91.95999724121094 loss 0.7576052521324158start training epoch 571 
+start test epoch 571 
+start test
+[Tio] epoch 571 acc 91.98999738769531 loss 0.7714410269355774start training epoch 572 
+start test epoch 572 
+start test
+[Tio] epoch 572 acc 92.05999731445313 loss 0.775110538482666start training epoch 573 
+start test epoch 573 
+start test
+[Tio] epoch 573 acc 91.83999711914062 loss 0.7700972653770447start training epoch 574 
+start test epoch 574 
+start test
+[Tio] epoch 574 acc 92.00999748535156 loss 0.771219213924408start training epoch 575 
+start test epoch 575 
+start test
+[Tio] epoch 575 acc 91.89999755859375 loss 0.7789101048660279start training epoch 576 
+start test epoch 576 
+start test
+[Tio] epoch 576 acc 91.93999724121093 loss 0.7837764156532288start training epoch 577 
+start test epoch 577 
+start test
+[Tio] epoch 577 acc 92.09999736328125 loss 0.7755559685134887start training epoch 578 
+start test epoch 578 
+start test
+[Tio] epoch 578 acc 91.949997265625 loss 0.7851103195381165start training epoch 579 
+start test epoch 579 
+start test
+[Tio] epoch 579 acc 92.00999765625 loss 0.7882178083992004start training epoch 580 
+start test epoch 580 
+start test
+[Tio] epoch 580 acc 91.84999716796875 loss 0.7815800604629517start training epoch 581 
+start test epoch 581 
+start test
+[Tio] epoch 581 acc 91.89999719238281 loss 0.7952738705635071start training epoch 582 
+start test epoch 582 
+start test
+[Tio] epoch 582 acc 91.9999974609375 loss 0.797856434135437start training epoch 583 
+start test epoch 583 
+start test
+[Tio] epoch 583 acc 91.89999709472656 loss 0.8097066952705383start training epoch 584 
+start test epoch 584 
+start test
+[Tio] epoch 584 acc 91.96999736328125 loss 0.8055248965263366start training epoch 585 
+start test epoch 585 
+start test
+[Tio] epoch 585 acc 92.009997265625 loss 0.8102920053672791start training epoch 586 
+start test epoch 586 
+start test
+[Tio] epoch 586 acc 91.90999729003906 loss 0.8029097056579589start training epoch 587 
+start test epoch 587 
+start test
+[Tio] epoch 587 acc 92.00999743652343 loss 0.8034527330589294start training epoch 588 
+start test epoch 588 
+start test
+[Tio] epoch 588 acc 91.99999738769532 loss 0.8303515131378174start training epoch 589 
+start test epoch 589 
+start test
+[Tio] epoch 589 acc 91.929997265625 loss 0.8151686112213135start training epoch 590 
+start test epoch 590 
+start test
+[Tio] epoch 590 acc 91.98999738769531 loss 0.8112303479576111start training epoch 591 
+start test epoch 591 
+start test
+[Tio] epoch 591 acc 91.98999724121094 loss 0.8111673745155334start training epoch 592 
+start test epoch 592 
+start test
+[Tio] epoch 592 acc 91.87999709472656 loss 0.813624228515625start training epoch 593 
+start test epoch 593 
+start test
+[Tio] epoch 593 acc 91.83999716796875 loss 0.827815547580719start training epoch 594 
+start test epoch 594 
+start test
+[Tio] epoch 594 acc 91.89999741210937 loss 0.8303618956947326start training epoch 595 
+start test epoch 595 
+start test
+[Tio] epoch 595 acc 91.98999731445312 loss 0.8226463337898254start training epoch 596 
+start test epoch 596 
+start test
+[Tio] epoch 596 acc 91.96999709472657 loss 0.8347441777420044start training epoch 597 
+start test epoch 597 
+start test
+[Tio] epoch 597 acc 91.98999755859376 loss 0.8435559832572938start training epoch 598 
+start test epoch 598 
+start test
+[Tio] epoch 598 acc 92.04999733886719 loss 0.843220133934021start training epoch 599 
+start test epoch 599 
+start test
+[Tio] epoch 599 acc 91.809997265625 loss 0.8428888895606995[Tio] acc 92.589997265625

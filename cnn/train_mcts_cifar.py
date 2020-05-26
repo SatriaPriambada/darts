@@ -85,10 +85,9 @@ def main():
     logfile.write("[Tio] log for architecture id {}".format(model_name))
     best_acc = 0
     device = torch.device("cuda")
-    if (args.resume) {
+    if args.resume:
         print("Load model")
         model = torch.load("checkpoint_mcts_cifar.pth")
-    }
     for epoch in range(args.start_epoch, args.epochs):
         scheduler.step()
         model.drop_path_prob = args.drop_path_prob * epoch / args.epochs
@@ -203,7 +202,7 @@ def torch_1_v_4_test(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("train.py")
     parser.add_argument(
-        "--data", type=str, default="~/data", help="location of the data corpus"
+        "--data", type=str, default="/localscratch/tumanov/data", help="location of the data corpus"
     )
     parser.add_argument("--batch_size", type=int, default=96, help="batch size")
     parser.add_argument(
