@@ -55,7 +55,9 @@ parser.add_argument(
 )
 parser.add_argument("--layers", type=int, default=14, help="total number of layers")
 parser.add_argument("--label_smooth", type=float, default=0.1, help="label smoothing")
-
+parser.add_argument(
+    "--model_path", type=str, default="EXP/model.pt", help="path of pretrained model"
+)
 
 best_acc1 = 0
 CLASSES = 1000
@@ -115,6 +117,7 @@ def load_models(args):
             model, find_unused_parameters=True
         )
         model = model.cuda(args.gpu)
+        model.load_state_dict(torch.load(args.model_path)["state_dict"])
         selected_archs.append(model)
     return selected_archs
 

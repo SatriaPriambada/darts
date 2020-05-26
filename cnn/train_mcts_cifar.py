@@ -113,7 +113,7 @@ def main():
         torch.save(model, "./checkpoint_mcts_cifar.pth")
         if acc > best_acc:
             logfile.write(
-                "[Tio] find new best model epoch {} acc {} loss {}".format(
+                "[Tio] find new best model epoch {} acc {} loss {}\n".format(
                     epoch, acc, loss
                 )
             )
@@ -149,7 +149,7 @@ def torch_1_v_4_train(
         loss = criterion(logits, target)
         if auxiliary:
             loss_aux = criterion(logits_aux, target)
-            loss += auxiliary_weight * loss_aux
+            loss += args.auxiliary_weight * loss_aux
         loss.backward()
         grad_clip = 5
         nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
@@ -202,7 +202,10 @@ def torch_1_v_4_test(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("train.py")
     parser.add_argument(
-        "--data", type=str, default="/localscratch/tumanov/data", help="location of the data corpus"
+        "--data",
+        type=str,
+        default="/localscratch/tumanov/data",
+        help="location of the data corpus",
     )
     parser.add_argument("--batch_size", type=int, default=96, help="batch size")
     parser.add_argument(
