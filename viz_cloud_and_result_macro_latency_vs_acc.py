@@ -80,14 +80,14 @@ if __name__ == "__main__":
         "-fc",
         "--filename_cloud",
         type=str,
-        default="op_gap_cloud/arch_profile_gpu-rtx2080_below_12_with_acc.csv",
+        default="mcts_generated/arch_profile_arch_op_gap_cifar100_with_acc.csv",
         help="start system with test config",
     )
     parser.add_argument(
         "-fmcts",
         "--filename_mcts",
         type=str,
-        default="mcts_generated/arch_profile_mcts_v7_t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers_with_acc.csv",
+        default="mcts_generated/arch_profile_mcts_v7_t8_generated_cifar_macro_mcts_v7_sim_100_mcts_architecture_cpu_layers_cifar100_mcts_with_acc.csv",
         help="start system with test config",
     )
     parser.add_argument(
