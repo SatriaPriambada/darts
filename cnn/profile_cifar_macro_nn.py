@@ -23,7 +23,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import argparse
 
-filename = "arch_profile_mcts_v7"
+filename = "arch_profile"
 OPORTUNITY_GAP_ARCHITECTURE = "arch_op_gap_cifar100.csv"
 INPUT_BATCH = 1
 INPUT_CHANNEL = 3
@@ -169,5 +169,5 @@ if __name__ == "__main__":
         drop_path_prob,
     )
     model_df_with_acc_and_lat.to_csv(
-        Path("op_gap_cloud/" + OPORTUNITY_GAP_ARCHITECTURE), index=None,
+        Path("mcts_generated/" + filename + "_" + OPORTUNITY_GAP_ARCHITECTURE), index=None,
     )
