@@ -112,6 +112,19 @@ def draw_acc_subplot(df, subplot, color):
         label="mobilenetv3",
     )
 
+    subplot.errorbar(
+        [312000000, 340000000, 403000000],
+        [75.2, 75.6, 76.7],
+        xerr=0,
+        fmt=".",
+        mfc="#00AA54",
+        mec="#00AA54",
+        ecolor=["#00AA54"],
+        color="#00AA54",
+        linestyle=line,
+        label="mnasnet",
+    )
+
     subplot.set_title("Acc vs MACs Comparison".format(args.device))
     subplot.set_ylabel("acc(%)", fontsize=13)
     subplot.set_xlabel("MAC(M)", fontsize=13)
